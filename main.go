@@ -39,9 +39,11 @@ func errmain(ctx context.Context) error {
 		return fmt.Errorf("db.Connect: %w", err)
 	}
 
-	slugDBCfg := map[string]string{
-		"special-abc": "special",
-		"special-def": "special",
+	var slugDBCfg map[string]string
+	if s := os.Getenv("TENANT_DB"); len(s) > 0 {
+		if err := json.Unmarshal([]byte(s), &slugDBCfg); err != nil {
+			return fmt.Errorf("json.Unmarshal: %w", err)
+		}
 	}
 
 	// start the server
