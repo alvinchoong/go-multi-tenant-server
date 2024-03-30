@@ -1,0 +1,5 @@
+DROP POLICY IF EXISTS user_isolation_policy ON users;
+
+ALTER TABLE users DISABLE ROW LEVEL SECURITY;
+
+DROP TABLE IF EXISTS users;
