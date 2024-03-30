@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
-	"math/rand"
 	"net/http"
 	"os"
 	"os/signal"
@@ -117,16 +116,21 @@ func Handler(ctx context.Context, pool *db.Pool, slugDBCfg map[string]string) *c
 		w.Write(b)
 	})
 
-	r.Get("/users/add", func(w http.ResponseWriter, r *http.Request) {
+	r.Post("/api/users", func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		slug := slugFromContext(ctx)
 		db := pickDBPool(pool, slugDBCfg, slug)
 
 		var u User
-		err := db.QueryRow(ctx, `
+		err := json.NewDecoder(r.Body).Decode(&u)
+		if err != nil {
+			http.Error(w, "json.Decode failed", http.StatusBadRequest)
+			return
+		}
+
+		err = db.QueryRow(ctx, `
 		INSERT INTO users (id, tenant_slug) 
-		VALUES ($1, $2) RETURNING id, tenant_slug, created_at, updated_at`,
-			generateRandomID(10), slug).
+		VALUES ($1, $2) RETURNING *`, u.ID, u.TenantSlug).
 			Scan(&u.ID, &u.TenantSlug, &u.CreatedAt, &u.UpdatedAt)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("db.Exec failed: %+v", err), http.StatusInternalServerError)
@@ -143,37 +147,12 @@ func Handler(ctx context.Context, pool *db.Pool, slugDBCfg map[string]string) *c
 		w.Write(b)
 	})
 
-	r.Get("/users/{id}", func(w http.ResponseWriter, r *http.Request) {
+	r.Get("/api/users", func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		slug := slugFromContext(ctx)
 		db := pickDBPool(pool, slugDBCfg, slug)
 
-		id := chi.URLParam(r, "id")
-
-		var u User
-		err := db.QueryRow(ctx, "SELECT id, tenant_slug, created_at, updated_at FROM users WHERE id = $1", id).
-			Scan(&u.ID, &u.TenantSlug, &u.CreatedAt, &u.UpdatedAt)
-		if err != nil {
-			http.Error(w, fmt.Sprintf("db.query failed: %+v", err), http.StatusInternalServerError)
-			return
-		}
-
-		b, err := json.Marshal(u)
-		if err != nil {
-			http.Error(w, fmt.Sprintf("json.Marshal failed: %+v", err), http.StatusInternalServerError)
-			return
-		}
-
-		w.Header().Set("Content-Type", "application/json")
-		w.Write(b)
-	})
-
-	r.Get("/users", func(w http.ResponseWriter, r *http.Request) {
-		ctx := r.Context()
-		slug := slugFromContext(ctx)
-		db := pickDBPool(pool, slugDBCfg, slug)
-
-		rows, err := db.Query(ctx, "SELECT id, tenant_slug, created_at, updated_at FROM users")
+		rows, err := db.Query(ctx, "SELECT * FROM users")
 		if err != nil {
 			http.Error(w, fmt.Sprintf("db.query failed: %+v", err), http.StatusInternalServerError)
 			return
@@ -187,6 +166,47 @@ func Handler(ctx context.Context, pool *db.Pool, slugDBCfg map[string]string) *c
 		}
 
 		b, err := json.Marshal(users)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("json.Marshal failed: %+v", err), http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(b)
+	})
+
+	r.Delete("/api/users/{id}", func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		slug := slugFromContext(ctx)
+		db := pickDBPool(pool, slugDBCfg, slug)
+
+		id := chi.URLParam(r, "id")
+
+		_, err := db.Exec(ctx, `DELETE FROM users WHERE id = $1`, id)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("db.query failed: %+v", err), http.StatusInternalServerError)
+			return
+		}
+
+		w.WriteHeader(http.StatusNoContent)
+	})
+
+	r.Get("/api/users/{id}", func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		slug := slugFromContext(ctx)
+		db := pickDBPool(pool, slugDBCfg, slug)
+
+		id := chi.URLParam(r, "id")
+
+		var u User
+		err := db.QueryRow(ctx, "SELECT * FROM users WHERE id = $1", id).
+			Scan(&u.ID, &u.TenantSlug, &u.CreatedAt, &u.UpdatedAt)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("db.query failed: %+v", err), http.StatusInternalServerError)
+			return
+		}
+
+		b, err := json.Marshal(u)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("json.Marshal failed: %+v", err), http.StatusInternalServerError)
 			return
@@ -243,18 +263,4 @@ func pickDBPool(p *db.Pool, slugDBCfg map[string]string, slug string) *pgxpool.P
 	}
 
 	return p.Primary
-}
-
-func generateRandomID(length int) string {
-	const alphabet = "abcdefghijklmnopqrstuvwxyz"
-
-	source := rand.NewSource(time.Now().UnixNano())
-	rng := rand.New(source)
-
-	id := make([]byte, length)
-	for i := 0; i < length; i++ {
-		id[i] = alphabet[rng.Intn(len(alphabet))]
-	}
-
-	return string(id)
 }
