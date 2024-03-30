@@ -13,7 +13,7 @@ server-run-app:
 	which air || go install github.com/cosmtrek/air@latest
 	DATABASE_POOL_RW_URL=$(DATABASE_POOL_RW_URL) DATABASE_SILO_RW_URL=$(DATABASE_SILO_RW_URL) TENANT_DB=${TENANT_DB} \
 	air --build.delay=1000 \
-		--build.cmd "go build -o bin/server main.go" \
+		--build.cmd "go build -o bin/server cmd/server/main.go" \
 		--build.bin "./bin/server" \
 		--build.include_ext "go,tpl,tmpl,html,js,css" \
 		--build.exclude_dir "tmp,vendor,testdata" \
