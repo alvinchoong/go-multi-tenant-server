@@ -11,7 +11,7 @@ down:
 
 server-run-app:
 	which air || go install github.com/cosmtrek/air@latest
-	DATABASE_PRIMARY_RW_URL=$(DATABASE_PRIMARY_RW_URL) DATABASE_SECONDARY_RW_URL=$(DATABASE_SECONDARY_RW_URL) \
+	DATABASE_POOL_RW_URL=$(DATABASE_POOL_RW_URL) DATABASE_SILO_RW_URL=$(DATABASE_SILO_RW_URL) \
 	air --build.delay=1000 \
 		--build.cmd "go build -o bin/server main.go" \
 		--build.bin "./bin/server" \
@@ -25,21 +25,20 @@ wait-for-pg:
 	done
 
 migrate:
-	@make go-migrate DATABASE_URL=$(DATABASE_PRIMARY_SU_URL)
-	@make go-migrate DATABASE_URL=$(DATABASE_SECONDARY_SU_URL)
+	@make go-migrate DATABASE_URL=$(DATABASE_POOL_SU_URL)
+	@make go-migrate DATABASE_URL=$(DATABASE_SILO_SU_URL)
 
 go-migrate: wait-for-pg
 	which migrate || go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
 	migrate -path ./database/migrations -database "$(DATABASE_URL)?sslmode=disable" up
 
 seed: migrate
-	psql $(DATABASE_PRIMARY_RW_URL) -f database/seed/primary.sql
-	psql $(DATABASE_SECONDARY_RW_URL) -f database/seed/secondary.sql
+	psql $(DATABASE_SILO_RW_URL) -f database/seed/silo.sql
 
-db-console-primary: DATABASE_URL=$(DATABASE_PRIMARY_SU_URL) # set to DATABASE_PRIMARY_RW_URL to test RLS
+db-console-primary: DATABASE_URL=$(DATABASE_POOL_SU_URL) # set to DATABASE_POOL_RW_URL to test RLS
 db-console-primary:
 	psql $(DATABASE_URL)
 
-db-console-secondary: DATABASE_URL=$(DATABASE_SECONDARY_SU_URL) # set to DATABASE_SECONDARY_RW_URL to test RLS
+db-console-secondary: DATABASE_URL=$(DATABASE_SILO_SU_URL) # set to DATABASE_SILO_RW_URL to test RLS
 db-console-secondary:
 	psql $(DATABASE_URL)

@@ -31,9 +31,9 @@ func main() {
 
 func errmain(ctx context.Context) error {
 	pool, err := db.Connect(ctx,
-		os.Getenv("DATABASE_PRIMARY_RW_URL"),
+		os.Getenv("DATABASE_POOL_RW_URL"),
 		map[string]string{
-			"special": os.Getenv("DATABASE_SECONDARY_RW_URL"),
+			"silo": os.Getenv("DATABASE_SILO_RW_URL"),
 		})
 	if err != nil {
 		return fmt.Errorf("db.Connect: %w", err)
