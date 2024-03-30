@@ -10,30 +10,30 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-type Pool struct {
-	Primary   *pgxpool.Pool
-	Secondary map[string]*pgxpool.Pool
+type Conns struct {
+	Pooled *pgxpool.Pool
+	Silos  map[string]*pgxpool.Pool
 }
 
-// Connect takes in a set of connString and returns a Pool
-func Connect(ctx context.Context, primaryConnString string, secondaryConnStrings map[string]string) (*Pool, error) {
-	primary, err := connect(ctx, primaryConnString)
+// Connect takes in a pooled connString and a set of connString
+func Connect(ctx context.Context, pooledConnString string, silosConnString map[string]string) (*Conns, error) {
+	pooled, err := connect(ctx, pooledConnString)
 	if err != nil {
-		return nil, fmt.Errorf("connect primary: %w", err)
+		return nil, fmt.Errorf("connect pooled: %w", err)
 	}
 
-	secondary := make(map[string]*pgxpool.Pool, len(secondaryConnStrings))
-	for k, v := range secondaryConnStrings {
+	silos := make(map[string]*pgxpool.Pool, len(silosConnString))
+	for k, v := range silosConnString {
 		conn, err := connect(ctx, v)
 		if err != nil {
 			return nil, fmt.Errorf("connect secondary (%s): %w", k, err)
 		}
-		secondary[k] = conn
+		silos[k] = conn
 	}
 
-	return &Pool{
-		Primary:   primary,
-		Secondary: secondary,
+	return &Conns{
+		Pooled: pooled,
+		Silos:  silos,
 	}, nil
 }
 

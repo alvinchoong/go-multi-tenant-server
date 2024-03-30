@@ -24,7 +24,7 @@ func main() {
 }
 
 func errmain(ctx context.Context) error {
-	pool, err := db.Connect(ctx,
+	conns, err := db.Connect(ctx,
 		os.Getenv("DATABASE_POOL_RW_URL"),
 		map[string]string{
 			"silo": os.Getenv("DATABASE_SILO_RW_URL"),
@@ -42,7 +42,7 @@ func errmain(ctx context.Context) error {
 
 	// start the server
 	slog.Info("starting http server at :8080")
-	if err := http.ListenAndServe(":8080", router.Handler(ctx, pool, slugDBCfg)); err != nil {
+	if err := http.ListenAndServe(":8080", router.Handler(ctx, conns, slugDBCfg)); err != nil {
 		return fmt.Errorf("http.ListenAndServe: %w", err)
 	}
 

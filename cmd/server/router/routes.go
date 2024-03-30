@@ -11,25 +11,26 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func Handler(ctx context.Context, pool *db.Pool, slugDBCfg map[string]string) *chi.Mux {
+func Handler(ctx context.Context, conns *db.Conns, slugDBCfg map[string]string) *chi.Mux {
 	r := chi.NewRouter()
 
-	r.Use(TenantSlugMiddleware)
+	r.Use(tenantSlugMiddleware)
 
-	r.Post("/api/tenants", tenantCreate(pool, slugDBCfg))
-	r.Get("/api/tenants", tenantList(pool, slugDBCfg))
+	r.Post("/api/tenants", tenantCreate(conns, slugDBCfg))
+	r.Get("/api/tenants", tenantList(conns, slugDBCfg))
 
-	r.Post("/api/users", userCreate(pool, slugDBCfg))
-	r.Get("/api/users", userList(pool, slugDBCfg))
-	r.Delete("/api/users/{id}", userDelete(pool, slugDBCfg))
-	r.Get("/api/users/{id}", userGet(pool, slugDBCfg))
+	r.Post("/api/users", userCreate(conns, slugDBCfg))
+	r.Get("/api/users", userList(conns, slugDBCfg))
+	r.Delete("/api/users/{id}", userDelete(conns, slugDBCfg))
+	r.Get("/api/users/{id}", userGet(conns, slugDBCfg))
 
 	return r
 }
 
-func TenantSlugMiddleware(next http.Handler) http.Handler {
+// tenantSlugMiddleware extract subdomain from request and set it in the context
+func tenantSlugMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Extract subdomain from request and set it in the context (not the best way)
+		// not the best way
 		parts := strings.Split(r.Host, ".")
 		slug := parts[0]
 
@@ -38,6 +39,7 @@ func TenantSlugMiddleware(next http.Handler) http.Handler {
 	})
 }
 
+// slugFromContext retrieve the slug from context
 func slugFromContext(ctx context.Context) string {
 	var slug string
 	if v := ctx.Value(db.SlugKey); v != nil {
@@ -49,12 +51,13 @@ func slugFromContext(ctx context.Context) string {
 	return slug
 }
 
-func pickDBPool(p *db.Pool, slugDBCfg map[string]string, slug string) *pgxpool.Pool {
+// pickDBConn returns the corresponding db conn for tenant, default to "pooled" db
+func pickDBConn(p *db.Conns, slugDBCfg map[string]string, slug string) *pgxpool.Pool {
 	if cfg, ok := slugDBCfg[slug]; ok {
-		if conn, ok := p.Secondary[cfg]; ok {
+		if conn, ok := p.Silos[cfg]; ok {
 			return conn
 		}
 	}
 
-	return p.Primary
+	return p.Pooled
 }

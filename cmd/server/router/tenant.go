@@ -11,20 +11,20 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-type Tenant struct {
+type tenant struct {
 	Slug        string    `json:"slug"`
 	Description *string   `json:"description"`
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`
 }
 
-func tenantCreate(pool *db.Pool, slugDBCfg map[string]string) http.HandlerFunc {
+func tenantCreate(conn *db.Conns, slugDBCfg map[string]string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		slug := slugFromContext(ctx)
-		db := pickDBPool(pool, slugDBCfg, slug)
+		db := pickDBConn(conn, slugDBCfg, slug)
 
-		var tenant Tenant
+		var tenant tenant
 		err := json.NewDecoder(r.Body).Decode(&tenant)
 		if err != nil {
 			http.Error(w, "json.Decode failed", http.StatusBadRequest)
@@ -51,11 +51,11 @@ func tenantCreate(pool *db.Pool, slugDBCfg map[string]string) http.HandlerFunc {
 	}
 }
 
-func tenantList(pool *db.Pool, slugDBCfg map[string]string) http.HandlerFunc {
+func tenantList(conn *db.Conns, slugDBCfg map[string]string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		slug := slugFromContext(ctx)
-		db := pickDBPool(pool, slugDBCfg, slug)
+		db := pickDBConn(conn, slugDBCfg, slug)
 
 		rows, err := db.Query(ctx, `SELECT * FROM tenants`)
 		if err != nil {
@@ -63,7 +63,7 @@ func tenantList(pool *db.Pool, slugDBCfg map[string]string) http.HandlerFunc {
 			return
 		}
 
-		tenants, err := pgx.CollectRows(rows, pgx.RowToStructByName[Tenant])
+		tenants, err := pgx.CollectRows(rows, pgx.RowToStructByName[tenant])
 		if err != nil {
 			http.Error(w, fmt.Sprintf("pgx.CollectRows failed: %+v", err), http.StatusInternalServerError)
 			return

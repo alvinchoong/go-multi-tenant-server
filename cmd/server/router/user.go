@@ -12,20 +12,20 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-type User struct {
+type user struct {
 	ID         string    `json:"id"`
 	TenantSlug string    `json:"tenant_slug"`
 	CreatedAt  time.Time `json:"created_at"`
 	UpdatedAt  time.Time `json:"updated_at"`
 }
 
-func userCreate(pool *db.Pool, slugDBCfg map[string]string) http.HandlerFunc {
+func userCreate(conns *db.Conns, slugDBCfg map[string]string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		slug := slugFromContext(ctx)
-		db := pickDBPool(pool, slugDBCfg, slug)
+		db := pickDBConn(conns, slugDBCfg, slug)
 
-		var u User
+		var u user
 		err := json.NewDecoder(r.Body).Decode(&u)
 		if err != nil {
 			http.Error(w, "json.Decode failed", http.StatusBadRequest)
@@ -52,11 +52,11 @@ func userCreate(pool *db.Pool, slugDBCfg map[string]string) http.HandlerFunc {
 	}
 }
 
-func userList(pool *db.Pool, slugDBCfg map[string]string) http.HandlerFunc {
+func userList(conns *db.Conns, slugDBCfg map[string]string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		slug := slugFromContext(ctx)
-		db := pickDBPool(pool, slugDBCfg, slug)
+		db := pickDBConn(conns, slugDBCfg, slug)
 
 		rows, err := db.Query(ctx, "SELECT * FROM users")
 		if err != nil {
@@ -65,7 +65,7 @@ func userList(pool *db.Pool, slugDBCfg map[string]string) http.HandlerFunc {
 		}
 		defer rows.Close()
 
-		users, err := pgx.CollectRows(rows, pgx.RowToStructByName[User])
+		users, err := pgx.CollectRows(rows, pgx.RowToStructByName[user])
 		if err != nil {
 			http.Error(w, fmt.Sprintf("pgx.CollectRows failed: %+v", err), http.StatusInternalServerError)
 			return
@@ -82,11 +82,11 @@ func userList(pool *db.Pool, slugDBCfg map[string]string) http.HandlerFunc {
 	}
 }
 
-func userDelete(pool *db.Pool, slugDBCfg map[string]string) http.HandlerFunc {
+func userDelete(conns *db.Conns, slugDBCfg map[string]string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		slug := slugFromContext(ctx)
-		db := pickDBPool(pool, slugDBCfg, slug)
+		db := pickDBConn(conns, slugDBCfg, slug)
 
 		id := chi.URLParam(r, "id")
 
@@ -100,11 +100,11 @@ func userDelete(pool *db.Pool, slugDBCfg map[string]string) http.HandlerFunc {
 	}
 }
 
-func userGet(pool *db.Pool, slugDBCfg map[string]string) http.HandlerFunc {
+func userGet(conns *db.Conns, slugDBCfg map[string]string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		slug := slugFromContext(ctx)
-		db := pickDBPool(pool, slugDBCfg, slug)
+		db := pickDBConn(conns, slugDBCfg, slug)
 
 		id := chi.URLParam(r, "id")
 
