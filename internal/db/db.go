@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
-	"regexp"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -15,12 +14,17 @@ type Conns struct {
 	Silos  map[string]*pgxpool.Pool
 }
 
+type ctxKey string
+
+var SlugCtxKey ctxKey = "slug"
+
 // Connect takes in a pooled connString and a set of connString
 func Connect(ctx context.Context, pooledConnString string, silosConnString map[string]string) (*Conns, error) {
 	pooled, err := connect(ctx, pooledConnString)
 	if err != nil {
 		return nil, fmt.Errorf("connect pooled: %w", err)
 	}
+	slog.Info("connected to database (pooled)")
 
 	silos := make(map[string]*pgxpool.Pool, len(silosConnString))
 	for k, v := range silosConnString {
@@ -29,6 +33,7 @@ func Connect(ctx context.Context, pooledConnString string, silosConnString map[s
 			return nil, fmt.Errorf("connect secondary (%s): %w", k, err)
 		}
 		silos[k] = conn
+		slog.Info("connected to database (" + k + ")")
 	}
 
 	return &Conns{
@@ -44,26 +49,18 @@ func connect(ctx context.Context, connString string) (*pgxpool.Pool, error) {
 	}
 
 	cfg.BeforeAcquire = func(ctx context.Context, conn *pgx.Conn) bool {
-		if v := ctx.Value(SlugKey); v != nil {
-			if slug, ok := v.(string); ok && isValidSlug(slug) {
-				// set the tenant id into this connection's setting
-				_, err := conn.Exec(ctx, "SET app.current_tenant TO '"+slug+"'")
+		slog.Debug("acquiring conn..")
+		if v := ctx.Value(SlugCtxKey); v != nil {
+			if slug, ok := v.(string); ok {
+				// set the tenant id for the current session
+				rows, err := conn.Query(ctx, "SELECT set_config('app.current_tenant', $1, false)", slug)
 				if err != nil {
 					// log the error, and then `return false` to destroy this connection instead of leaving it open.
 					slog.Error("BeforeAcquire conn.Exec", slog.Any("err", err))
 					return false
 				}
+				rows.Close()
 			}
-		}
-		return true
-	}
-	cfg.AfterRelease = func(conn *pgx.Conn) bool {
-		// set the setting to be empty before this connection is released to pool
-		_, err := conn.Exec(context.Background(), "RESET app.current_tenant")
-		if err != nil {
-			// log the error, and then`return false` to destroy this connection instead of leaving it open.
-			slog.Error("AfterRelease conn.Exec", slog.Any("err", err))
-			return false
 		}
 		return true
 	}
@@ -82,16 +79,5 @@ func connect(ctx context.Context, connString string) (*pgxpool.Pool, error) {
 		return nil, fmt.Errorf("conn.Ping: %w", err)
 	}
 
-	slog.Info("connected to database...")
 	return conn, nil
-}
-
-type key string
-
-var SlugKey key = "slug"
-
-func isValidSlug(slug string) bool {
-	// Regular expression to match only alphanumeric characters and underscores
-	r := regexp.MustCompile(`^[a-zA-Z0-9_-]+$`)
-	return r.MatchString(slug)
 }

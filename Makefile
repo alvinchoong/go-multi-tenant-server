@@ -42,3 +42,7 @@ db-console-primary:
 db-console-secondary: DATABASE_URL=$(DATABASE_SILO_SU_URL) # set to DATABASE_SILO_RW_URL to test RLS
 db-console-secondary:
 	psql $(DATABASE_URL)
+
+bench:
+	DATABASE_POOL_RW_URL=$(DATABASE_POOL_RW_URL) \
+	go test ./... -bench=. 

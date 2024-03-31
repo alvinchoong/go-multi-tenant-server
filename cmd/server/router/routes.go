@@ -34,7 +34,7 @@ func tenantSlugMiddleware(next http.Handler) http.Handler {
 		parts := strings.Split(r.Host, ".")
 		slug := parts[0]
 
-		ctx := context.WithValue(r.Context(), db.SlugKey, slug)
+		ctx := context.WithValue(r.Context(), db.SlugCtxKey, slug)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
@@ -42,7 +42,7 @@ func tenantSlugMiddleware(next http.Handler) http.Handler {
 // slugFromContext retrieve the slug from context
 func slugFromContext(ctx context.Context) string {
 	var slug string
-	if v := ctx.Value(db.SlugKey); v != nil {
+	if v := ctx.Value(db.SlugCtxKey); v != nil {
 		if s, ok := v.(string); ok {
 			slug = s
 		}
