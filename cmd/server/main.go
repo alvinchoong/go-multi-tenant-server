@@ -24,6 +24,14 @@ func main() {
 }
 
 func errmain(ctx context.Context) error {
+	// slog config
+	var level slog.Level // default to INFO
+	_ = level.UnmarshalText([]byte(os.Getenv("LOG_LEVEL")))
+	slog.SetDefault(slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+		Level: level,
+	})))
+
+	// connect to db
 	conns, err := db.Connect(ctx,
 		os.Getenv("DATABASE_POOL_RW_URL"),
 		map[string]string{

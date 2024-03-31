@@ -11,11 +11,11 @@ down:
 
 server-run-app:
 	which air || go install github.com/cosmtrek/air@latest
-	DATABASE_POOL_RW_URL=$(DATABASE_POOL_RW_URL) DATABASE_SILO_RW_URL=$(DATABASE_SILO_RW_URL) TENANT_DB=${TENANT_DB} \
+	$(shell cat .env | egrep -v '^#' | xargs -0) \
 	air --build.delay=1000 \
 		--build.cmd "go build -o bin/server cmd/server/main.go" \
 		--build.bin "./bin/server" \
-		--build.include_ext "go,tpl,tmpl,html,js,css" \
+		--build.include_ext "go" \
 		--build.exclude_dir "tmp,vendor,testdata" \
 
 wait-for-pg:
@@ -35,12 +35,12 @@ go-migrate: wait-for-pg
 seed: migrate
 	psql $(DATABASE_SILO_RW_URL) -f database/seed/silo.sql
 
-db-console-primary: DATABASE_URL=$(DATABASE_POOL_SU_URL) # set to DATABASE_POOL_RW_URL to test RLS
-db-console-primary:
+db-console-pool: DATABASE_URL=$(DATABASE_POOL_SU_URL) # set to DATABASE_POOL_RW_URL to test RLS
+db-console-pool:
 	psql $(DATABASE_URL)
 
-db-console-secondary: DATABASE_URL=$(DATABASE_SILO_SU_URL) # set to DATABASE_SILO_RW_URL to test RLS
-db-console-secondary:
+db-console-silo: DATABASE_URL=$(DATABASE_SILO_SU_URL) # set to DATABASE_SILO_RW_URL to test RLS
+db-console-silo:
 	psql $(DATABASE_URL)
 
 bench:
