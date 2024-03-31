@@ -21,6 +21,8 @@ For more information on how PostgreSQL's Row-Level Security can be used for mult
 1. Run the server: `make up seed server-run-app`
 2. Access the API at <http://lvh.me:8080>
 
+**Note:** `lvh.me` resolves to 127.0.0.1, useful for local development to simulate subdomains without modifying the hosts file.
+
 ## Tenant
 
 `special.lvh.me:8080` is already set up using the "silo" partitioning model.
@@ -35,3 +37,13 @@ For other tenants that should use the "pool" partitioning model follow the steps
 - `/api/tenants`: Create tenant (GET, POST)
 - `/api/users`: Manage tenant users (GET, POST)
 - `/api/users/{id}`: Manage tenant users (GET, DELETE)
+
+## Notes on Row-Level Security
+
+- **Superusers:** Always bypass row-level security. Identified by `pg_roles.rolsuper = true`
+
+- **BYPASSRLS Roles:** Always bypass row-level security. Identified by `pg_roles.rolbypassrls = true`
+
+- **Table Owners:** By default, bypass row-level security. Can be enforced using `ALTER TABLE ... FORCE ROW LEVEL SECURITY`
+
+For more information, see [PostgreSQL documentation](https://www.postgresql.org/docs/current/ddl-rowsecurity.html#DDL-ROWSECURITY).
