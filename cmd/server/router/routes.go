@@ -11,10 +11,10 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func Handler(ctx context.Context, conns *db.Conns, slugDBCfg map[string]string) *chi.Mux {
+func Handler(ctx context.Context, conns *db.Conns, slugDBCfg map[string]string, host string) *chi.Mux {
 	r := chi.NewRouter()
 
-	r.Use(tenantSlugMiddleware)
+	r.Use(tenantSlugMiddleware(host))
 
 	r.Post("/api/tenants", tenantCreate(conns, slugDBCfg))
 	r.Get("/api/tenants", tenantList(conns, slugDBCfg))
@@ -28,15 +28,21 @@ func Handler(ctx context.Context, conns *db.Conns, slugDBCfg map[string]string) 
 }
 
 // tenantSlugMiddleware extract subdomain from request and set it in the context
-func tenantSlugMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// not the best way
-		parts := strings.Split(r.Host, ".")
-		slug := parts[0]
+func tenantSlugMiddleware(host string) func(next http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		fn := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			ctx := r.Context()
 
-		ctx := context.WithValue(r.Context(), db.SlugCtxKey, slug)
-		next.ServeHTTP(w, r.WithContext(ctx))
-	})
+			subdomain := strings.TrimSuffix(r.Host, "."+host)
+			if subdomain != "" && subdomain != host {
+				ctx = context.WithValue(ctx, db.SlugCtxKey, subdomain)
+			}
+
+			next.ServeHTTP(w, r.WithContext(ctx))
+		})
+
+		return http.HandlerFunc(fn)
+	}
 }
 
 // slugFromContext retrieve the slug from context

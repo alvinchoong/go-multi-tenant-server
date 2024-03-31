@@ -52,8 +52,9 @@ func errmain(ctx context.Context) error {
 	}
 
 	// start the server
+	host := os.Getenv("APP_HOST")
 	slog.Info("starting http server at :8080")
-	if err := http.ListenAndServe(":8080", router.Handler(ctx, conns, slugDBCfg)); err != nil {
+	if err := http.ListenAndServe(":8080", router.Handler(ctx, conns, slugDBCfg, host)); err != nil {
 		return fmt.Errorf("http.ListenAndServe: %w", err)
 	}
 
