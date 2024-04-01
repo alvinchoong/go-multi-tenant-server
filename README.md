@@ -14,11 +14,11 @@ For more information on how PostgreSQL's Row-Level Security can be used for mult
 
 ## Configuration
 
-1. Set the `TENANT_DB` environment variable with the mapping of `tenant slugs` to db. if unspecified for a tenant, it will default to `pool`.
+1. Set the `TENANT_DB` environment variable with the mapping of `tenant slugs` to db. if unspecified for a tenant, it will default using the `pooled` db.
 
 ## Usage
 
-1. Run the server: `make up seed server-run-app`
+1. Run the server: `make up seed run`
 2. Access the API at <http://lvh.me:8080>
 
 **Note:** `lvh.me` resolves to 127.0.0.1, useful for local development to simulate subdomains without modifying the hosts file.

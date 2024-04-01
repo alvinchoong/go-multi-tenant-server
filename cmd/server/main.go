@@ -32,20 +32,23 @@ func errmain(ctx context.Context) error {
 	})))
 
 	// connect to db
-	conns, err := db.Connect(ctx,
-		os.Getenv("DATABASE_POOL_RW_URL"),
-		map[string]string{
-			"silo": os.Getenv("DATABASE_SILO_RW_URL"),
-		})
-	if err != nil {
-		return fmt.Errorf("db.Connect: %w", err)
-	}
-
 	var slugDBCfg map[string]string
 	if s := os.Getenv("TENANT_DB"); len(s) > 0 {
 		if err := json.Unmarshal([]byte(s), &slugDBCfg); err != nil {
 			return fmt.Errorf("json.Unmarshal: %w", err)
 		}
+	}
+
+	var silosDB map[string]string
+	if s := os.Getenv("DATABASE_SILO_RW_URLS"); len(s) > 0 {
+		if err := json.Unmarshal([]byte(s), &silosDB); err != nil {
+			return fmt.Errorf("json.Unmarshal: %w", err)
+		}
+	}
+
+	conns, err := db.Connect(ctx, os.Getenv("DATABASE_POOL_RW_URL"), silosDB)
+	if err != nil {
+		return fmt.Errorf("db.Connect: %w", err)
 	}
 
 	// start the server

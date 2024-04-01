@@ -53,8 +53,8 @@ func slugFromContext(ctx context.Context) string {
 
 // pickDBConn returns the corresponding db conn for tenant, default to "pooled" db
 func pickDBConn(p *db.Conns, slugDBCfg map[string]string, slug string) *pgxpool.Pool {
-	if cfg, ok := slugDBCfg[slug]; ok {
-		if conn, ok := p.Silos[cfg]; ok {
+	if db, ok := slugDBCfg[slug]; ok {
+		if conn, ok := p.Silos[db]; ok {
 			return conn
 		}
 	}
