@@ -10,6 +10,10 @@ down:
 	docker-compose down
 
 run:
+	$(shell cat .env | egrep -v '^#' | xargs -0) \
+	go run cmd/server/main.go
+
+dev:
 	which air || go install github.com/cosmtrek/air@latest
 	$(shell cat .env | egrep -v '^#' | xargs -0) \
 	air --build.delay=1000 \
