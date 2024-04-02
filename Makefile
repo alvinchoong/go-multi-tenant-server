@@ -38,3 +38,11 @@ wait-for-pg:
 bench:
 	DATABASE_POOL_RW_URL=$(DATABASE_POOL_RW_URL) \
 	go test ./... -bench=. 
+
+reset-db:
+	docker-compose down db-pool db-silo
+	docker-compose up db-pool db-silo --force-recreate --build --detach
+	make seed
+
+test-api:
+	newman run docs/multi-tenant.postman_collection.json
