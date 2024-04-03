@@ -1,0 +1,713 @@
+{
+  "info": {
+    "_postman_id": "d3653409-95a5-4f21-8731-07bbf5a1261e",
+    "name": "multi-tenant",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "1635972"
+  },
+  "item": [
+    {
+      "name": "populate data",
+      "item": [
+        {
+          "name": "tenant 1",
+          "item": [
+            {
+              "name": "create tenant",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Status code is 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"Response equals request\", function () {",
+                      "    const res = pm.response.json();",
+                      "    const req = JSON.parse(pm.request.body.raw);",
+                      "    pm.expect(res.slug).to.eql(req.slug);",
+                      "    pm.expect(res.description).to.eql(req.description);",
+                      "});",
+                      ""
+                    ],
+                    "type": "text/javascript",
+                    "packages": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"slug\": \"{{tenant}}\",\n    \"description\": \"{{tenant}} description\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "lvh.me:8080/api/tenants",
+                  "host": ["lvh", "me"],
+                  "port": "8080",
+                  "path": ["api", "tenants"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "list users before creating",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Status code is 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"Response is empty\", function () {",
+                      "    const res = pm.response.json();",
+                      "    pm.expect(res).to.be.an(\"array\");",
+                      "    pm.expect(res).to.be.empty;",
+                      "});",
+                      ""
+                    ],
+                    "type": "text/javascript",
+                    "packages": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{tenant}}.lvh.me:8080/api/users",
+                  "host": ["{{tenant}}", "lvh", "me"],
+                  "port": "8080",
+                  "path": ["api", "users"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "create first user",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Status code is 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"Response equals request\", function () {",
+                      "    const res = pm.response.json();",
+                      "    const req = JSON.parse(pm.request.body.raw);",
+                      "    pm.expect(res.id).to.eql(req.id);",
+                      "    pm.expect(res.tenant_slug).to.eql(req.tenant_slug);",
+                      "});",
+                      ""
+                    ],
+                    "type": "text/javascript",
+                    "packages": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"id\": \"1001\",\n    \"tenant_slug\": \"{{tenant}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{tenant}}.lvh.me:8080/api/users",
+                  "host": ["{{tenant}}", "lvh", "me"],
+                  "port": "8080",
+                  "path": ["api", "users"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "create second user",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Status code is 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"Response equals request\", function () {",
+                      "    const res = pm.response.json();",
+                      "    const req = JSON.parse(pm.request.body.raw);",
+                      "    pm.expect(res.id).to.eql(req.id);",
+                      "    pm.expect(res.tenant_slug).to.eql(req.tenant_slug);",
+                      "});",
+                      ""
+                    ],
+                    "type": "text/javascript",
+                    "packages": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"id\": \"1002\",\n    \"tenant_slug\": \"{{tenant}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{tenant}}.lvh.me:8080/api/users",
+                  "host": ["{{tenant}}", "lvh", "me"],
+                  "port": "8080",
+                  "path": ["api", "users"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "list users after creating",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "const tenant = pm.collectionVariables.get(\"tenant\")",
+                      "",
+                      "pm.test(\"Status code is 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"Response contains users created\", function () {",
+                      "    const res = pm.response.json();",
+                      "",
+                      "    pm.expect(res).to.be.an(\"array\");",
+                      "    pm.expect(res.length).to.equal(2);",
+                      "",
+                      "    pm.expect(res[0].id).to.equal(\"1001\");",
+                      "    pm.expect(res[0].tenant_slug).to.equal(tenant)",
+                      "",
+                      "    pm.expect(res[1].id).to.equal(\"1002\");",
+                      "    pm.expect(res[1].tenant_slug).to.equal(tenant)",
+                      "});",
+                      ""
+                    ],
+                    "type": "text/javascript",
+                    "packages": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{tenant}}.lvh.me:8080/api/users",
+                  "host": ["{{tenant}}", "lvh", "me"],
+                  "port": "8080",
+                  "path": ["api", "users"]
+                }
+              },
+              "response": []
+            }
+          ],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "exec": ["pm.collectionVariables.set(\"tenant\", \"tenant-1\");"]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "exec": [""]
+              }
+            }
+          ]
+        },
+        {
+          "name": "tenant 2",
+          "item": [
+            {
+              "name": "create tenant",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Status code is 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"Response equals request\", function () {",
+                      "    const res = pm.response.json();",
+                      "    const req = JSON.parse(pm.request.body.raw);",
+                      "    pm.expect(res.slug).to.eql(req.slug);",
+                      "    pm.expect(res.description).to.eql(req.description);",
+                      "});",
+                      ""
+                    ],
+                    "type": "text/javascript",
+                    "packages": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"slug\": \"{{tenant}}\",\n    \"description\": \"{{tenant}} description\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "lvh.me:8080/api/tenants",
+                  "host": ["lvh", "me"],
+                  "port": "8080",
+                  "path": ["api", "tenants"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "list users before creating",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Status code is 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"Response is empty\", function () {",
+                      "    const res = pm.response.json();",
+                      "    pm.expect(res).to.be.an(\"array\");",
+                      "    pm.expect(res).to.be.empty;",
+                      "});",
+                      ""
+                    ],
+                    "type": "text/javascript",
+                    "packages": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{tenant}}.lvh.me:8080/api/users",
+                  "host": ["{{tenant}}", "lvh", "me"],
+                  "port": "8080",
+                  "path": ["api", "users"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "create first user",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Status code is 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"Response equals request\", function () {",
+                      "    const res = pm.response.json();",
+                      "    const req = JSON.parse(pm.request.body.raw);",
+                      "    pm.expect(res.id).to.eql(req.id);",
+                      "    pm.expect(res.tenant_slug).to.eql(req.tenant_slug);",
+                      "});",
+                      ""
+                    ],
+                    "type": "text/javascript",
+                    "packages": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"id\": \"2001\",\n    \"tenant_slug\": \"{{tenant}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{tenant}}.lvh.me:8080/api/users",
+                  "host": ["{{tenant}}", "lvh", "me"],
+                  "port": "8080",
+                  "path": ["api", "users"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "create second user",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Status code is 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"Response equals request\", function () {",
+                      "    const res = pm.response.json();",
+                      "    const req = JSON.parse(pm.request.body.raw);",
+                      "    pm.expect(res.id).to.eql(req.id);",
+                      "    pm.expect(res.tenant_slug).to.eql(req.tenant_slug);",
+                      "});",
+                      ""
+                    ],
+                    "type": "text/javascript",
+                    "packages": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"id\": \"2002\",\n    \"tenant_slug\": \"{{tenant}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{tenant}}.lvh.me:8080/api/users",
+                  "host": ["{{tenant}}", "lvh", "me"],
+                  "port": "8080",
+                  "path": ["api", "users"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "list users after creating",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "const tenant = pm.collectionVariables.get(\"tenant\")",
+                      "",
+                      "pm.test(\"Status code is 200\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "",
+                      "pm.test(\"Response contains users created\", function () {",
+                      "    const res = pm.response.json();",
+                      "",
+                      "    pm.expect(res).to.be.an(\"array\");",
+                      "    pm.expect(res.length).to.equal(2);",
+                      "",
+                      "    pm.expect(res[0].id).to.equal(\"2001\");",
+                      "    pm.expect(res[0].tenant_slug).to.equal(tenant)",
+                      "",
+                      "    pm.expect(res[1].id).to.equal(\"2002\");",
+                      "    pm.expect(res[1].tenant_slug).to.equal(tenant)",
+                      "});",
+                      ""
+                    ],
+                    "type": "text/javascript",
+                    "packages": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{tenant}}.lvh.me:8080/api/users",
+                  "host": ["{{tenant}}", "lvh", "me"],
+                  "port": "8080",
+                  "path": ["api", "users"]
+                }
+              },
+              "response": []
+            }
+          ],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "exec": ["pm.collectionVariables.set(\"tenant\", \"tenant-2\");"]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "exec": [""]
+              }
+            }
+          ]
+        },
+        {
+          "name": "list tenants",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains tenants created\", function () {",
+                  "    const res = pm.response.json();",
+                  "",
+                  "    pm.expect(res).to.be.an(\"array\");",
+                  "    pm.expect(res.length).to.equal(2);",
+                  "",
+                  "    pm.expect(res[0].slug).to.equal(\"tenant-1\");",
+                  "    pm.expect(res[0].description).to.equal(\"tenant-1 description\");",
+                  "",
+                  "    pm.expect(res[1].slug).to.equal(\"tenant-2\");",
+                  "    pm.expect(res[1].description).to.equal(\"tenant-2 description\");",
+                  "});",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "lvh.me:8080/api/tenants",
+              "host": ["lvh", "me"],
+              "port": "8080",
+              "path": ["api", "tenants"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "data isolation",
+      "item": [
+        {
+          "name": "tenant 1",
+          "item": [
+            {
+              "name": "create user to tenant 2",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Status code is 403\", function () {",
+                      "    pm.response.to.have.status(403);",
+                      "    pm.expect(pm.response.text()).to.include(\"permission denied\")",
+                      "});",
+                      ""
+                    ],
+                    "type": "text/javascript",
+                    "packages": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"id\": \"2003\",\n    \"tenant_slug\": \"tenant-2\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{tenant}}.lvh.me:8080/api/users",
+                  "host": ["{{tenant}}", "lvh", "me"],
+                  "port": "8080",
+                  "path": ["api", "users"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "get user from tenant 2",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Status code is 404\", function () {",
+                      "    pm.response.to.have.status(404);",
+                      "    pm.expect(pm.response.text()).to.include(\"user not found\")",
+                      "});",
+                      ""
+                    ],
+                    "type": "text/javascript",
+                    "packages": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{tenant}}.lvh.me:8080/api/users/2001",
+                  "host": ["{{tenant}}", "lvh", "me"],
+                  "port": "8080",
+                  "path": ["api", "users", "2001"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "delete user from tenant 2",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Status code is 404\", function () {",
+                      "    pm.response.to.have.status(404);",
+                      "    pm.expect(pm.response.text()).to.include(\"user not found\")",
+                      "});",
+                      ""
+                    ],
+                    "type": "text/javascript",
+                    "packages": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{tenant}}.lvh.me:8080/api/users/2001",
+                  "host": ["{{tenant}}", "lvh", "me"],
+                  "port": "8080",
+                  "path": ["api", "users", "2001"]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "list users",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "const tenant = pm.collectionVariables.get(\"tenant\")",
+                      "",
+                      "pm.test('Status code is 200', function () {",
+                      "    pm.response.to.have.status(200);",
+                      "})",
+                      "",
+                      "pm.test(`Response contains only ${tenant} users`, function () {",
+                      "    const res = pm.response.json();",
+                      "",
+                      "    pm.expect(res).to.be.an(\"array\");",
+                      "    for (let i = 0; i < res.length; i++) {",
+                      "        pm.expect(res[i].tenant_slug).to.equal(tenant)",
+                      "    }",
+                      "});",
+                      "",
+                      ""
+                    ],
+                    "type": "text/javascript",
+                    "packages": {}
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{tenant}}.lvh.me:8080/api/users",
+                  "host": ["{{tenant}}", "lvh", "me"],
+                  "port": "8080",
+                  "path": ["api", "users"]
+                }
+              },
+              "response": []
+            }
+          ],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "exec": ["pm.collectionVariables.set(\"tenant\", \"tenant-1\");"]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "exec": [""]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "tenant",
+      "value": ""
+    },
+    {
+      "key": "{{other_tenant}}",
+      "value": ""
+    },
+    {
+      "key": "other_tenant",
+      "value": ""
+    }
+  ]
+}

@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -12,6 +13,8 @@ import (
 
 	"multi-tenant-server/cmd/server/router"
 	"multi-tenant-server/internal/db"
+
+	"golang.org/x/sync/errgroup"
 )
 
 func main() {
@@ -51,12 +54,32 @@ func errmain(ctx context.Context) error {
 		return fmt.Errorf("db.Connect: %w", err)
 	}
 
-	// start the server
 	host := os.Getenv("APP_HOST")
-	slog.Info("starting http server at :8080")
-	if err := http.ListenAndServe(":8080", router.Handler(ctx, conns, slugDBCfg, host)); err != nil {
-		return fmt.Errorf("http.ListenAndServe: %w", err)
+	server := &http.Server{
+		Addr:    host,
+		Handler: router.Handler(ctx, conns, slugDBCfg, host),
 	}
 
-	return nil
+	// start the server
+	g, gctx := errgroup.WithContext(ctx)
+	g.Go(func() error {
+		<-gctx.Done()
+		slog.Info("server shutting down..")
+
+		defer server.Close()
+		if err := server.Shutdown(ctx); err != nil {
+			return fmt.Errorf("server.Shutdown: %w", err)
+		}
+		return nil
+	})
+
+	g.Go(func() error {
+		slog.Info("server starting", slog.String("addr", server.Addr))
+		if err := server.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
+			return fmt.Errorf("server.ListenAndServe: %w", err)
+		}
+		return nil
+	})
+
+	return g.Wait()
 }

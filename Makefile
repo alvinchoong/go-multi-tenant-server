@@ -10,6 +10,10 @@ down:
 	docker-compose down
 
 run:
+	$(shell cat .env | egrep -v '^#' | xargs -0) \
+	go run cmd/server/main.go
+
+dev:
 	which air || go install github.com/cosmtrek/air@latest
 	$(shell cat .env | egrep -v '^#' | xargs -0) \
 	air --build.delay=1000 \
@@ -38,3 +42,11 @@ wait-for-pg:
 bench:
 	DATABASE_POOL_RW_URL=$(DATABASE_POOL_RW_URL) \
 	go test ./... -bench=. 
+
+reset-db:
+	docker-compose down db-pool db-silo
+	docker-compose up db-pool db-silo --force-recreate --build --detach
+	make seed
+
+test-api:
+	newman run docs/multi-tenant.postman_collection.json
