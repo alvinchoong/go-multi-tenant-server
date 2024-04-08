@@ -1,0 +1,16 @@
+{
+  // editor related
+  "editor.formatOnPaste": true,
+  "editor.formatOnSave": true,
+  // gopls: language server
+  "go.useLanguageServer": true,
+  "gopls": {
+    // use gofumpt
+    "formatting.gofumpt": true
+  },
+  "[go][go.mod]": {
+    "editor.codeActionsOnSave": {
+      "source.organizeImports": "explicit"
+    }
+  }
+}
