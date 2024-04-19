@@ -69,7 +69,7 @@ func connect(ctx context.Context, connString string) (*pgxpool.Pool, error) {
 		if v := ctx.Value(SlugCtxKey); v != nil {
 			if slug, ok := v.(string); ok {
 				// set the tenant id for the current session
-				rows, err := conn.Query(ctx, "SELECT set_config('app.current_tenant', $1, false)", slug)
+				rows, err := conn.Query(ctx, "SELECT set_config('app.current_user', $1, false)", slug)
 				if err != nil {
 					// log the error, and then `return false` to destroy this connection instead of leaving it open.
 					slog.Error("BeforeAcquire conn.Exec", slog.Any("err", err))

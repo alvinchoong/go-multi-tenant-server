@@ -1,5 +1,5 @@
 -- Seed 1 tenant
-INSERT INTO tenants (slug, description)
+INSERT INTO users (slug)
 VALUES
-  ('special', 'special tenant using silo db')
+  ('special')
 ON CONFLICT DO NOTHING;
