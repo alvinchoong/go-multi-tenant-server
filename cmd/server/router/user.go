@@ -21,11 +21,10 @@ type user struct {
 	UpdatedAt  time.Time `json:"updated_at"`
 }
 
-func userCreate(conns *db.Conns, slugDBCfg map[string]string) http.HandlerFunc {
+func userCreate(conns *db.Conns) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-		slug := slugFromContext(ctx)
-		db := pickDBConn(conns, slugDBCfg, slug)
+		conn := conns.Get(ctx)
 
 		var u user
 		err := json.NewDecoder(r.Body).Decode(&u)
@@ -34,7 +33,7 @@ func userCreate(conns *db.Conns, slugDBCfg map[string]string) http.HandlerFunc {
 			return
 		}
 
-		err = db.QueryRow(ctx, `
+		err = conn.QueryRow(ctx, `
 		INSERT INTO users (id, tenant_slug) 
 		VALUES ($1, $2) RETURNING *`, u.ID, u.TenantSlug).
 			Scan(&u.ID, &u.TenantSlug, &u.CreatedAt, &u.UpdatedAt)
@@ -59,13 +58,12 @@ func userCreate(conns *db.Conns, slugDBCfg map[string]string) http.HandlerFunc {
 	}
 }
 
-func userList(conns *db.Conns, slugDBCfg map[string]string) http.HandlerFunc {
+func userList(conns *db.Conns) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-		slug := slugFromContext(ctx)
-		db := pickDBConn(conns, slugDBCfg, slug)
+		conn := conns.Get(ctx)
 
-		rows, err := db.Query(ctx, "SELECT * FROM users")
+		rows, err := conn.Query(ctx, "SELECT * FROM users")
 		if err != nil {
 			http.Error(w, fmt.Sprintf("db.query failed: %+v", err), http.StatusInternalServerError)
 			return
@@ -89,15 +87,14 @@ func userList(conns *db.Conns, slugDBCfg map[string]string) http.HandlerFunc {
 	}
 }
 
-func userDelete(conns *db.Conns, slugDBCfg map[string]string) http.HandlerFunc {
+func userDelete(conns *db.Conns) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-		slug := slugFromContext(ctx)
-		db := pickDBConn(conns, slugDBCfg, slug)
+		conn := conns.Get(ctx)
 
 		id := chi.URLParam(r, "id")
 
-		res, err := db.Exec(ctx, `DELETE FROM users WHERE id = $1`, id)
+		res, err := conn.Exec(ctx, `DELETE FROM users WHERE id = $1`, id)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("db.query failed: %+v", err), http.StatusInternalServerError)
 			return
@@ -111,16 +108,15 @@ func userDelete(conns *db.Conns, slugDBCfg map[string]string) http.HandlerFunc {
 	}
 }
 
-func userGet(conns *db.Conns, slugDBCfg map[string]string) http.HandlerFunc {
+func userGet(conns *db.Conns) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-		slug := slugFromContext(ctx)
-		db := pickDBConn(conns, slugDBCfg, slug)
+		conn := conns.Get(ctx)
 
 		id := chi.URLParam(r, "id")
 
 		var u user
-		err := db.QueryRow(ctx, `SELECT * FROM users WHERE id = $1`, id).
+		err := conn.QueryRow(ctx, `SELECT * FROM users WHERE id = $1`, id).
 			Scan(&u.ID, &u.TenantSlug, &u.CreatedAt, &u.UpdatedAt)
 		if err != nil {
 			if errors.Is(err, pgx.ErrNoRows) {

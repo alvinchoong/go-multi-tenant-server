@@ -18,11 +18,10 @@ type tenant struct {
 	UpdatedAt   time.Time `json:"updated_at"`
 }
 
-func tenantCreate(conn *db.Conns, slugDBCfg map[string]string) http.HandlerFunc {
+func tenantCreate(conns *db.Conns) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-		slug := slugFromContext(ctx)
-		db := pickDBConn(conn, slugDBCfg, slug)
+		conn := conns.Get(ctx)
 
 		var tenant tenant
 		err := json.NewDecoder(r.Body).Decode(&tenant)
@@ -31,7 +30,7 @@ func tenantCreate(conn *db.Conns, slugDBCfg map[string]string) http.HandlerFunc 
 			return
 		}
 
-		err = db.QueryRow(ctx, `
+		err = conn.QueryRow(ctx, `
 		INSERT INTO tenants (slug, description) 
 		VALUES ($1, $2) RETURNING *`, tenant.Slug, tenant.Description).
 			Scan(&tenant.Slug, &tenant.Description, &tenant.CreatedAt, &tenant.UpdatedAt)
@@ -51,13 +50,12 @@ func tenantCreate(conn *db.Conns, slugDBCfg map[string]string) http.HandlerFunc 
 	}
 }
 
-func tenantList(conn *db.Conns, slugDBCfg map[string]string) http.HandlerFunc {
+func tenantList(conns *db.Conns) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-		slug := slugFromContext(ctx)
-		db := pickDBConn(conn, slugDBCfg, slug)
+		conn := conns.Get(ctx)
 
-		rows, err := db.Query(ctx, `SELECT * FROM tenants`)
+		rows, err := conn.Query(ctx, `SELECT * FROM tenants`)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("db.Query failed: %+v", err), http.StatusInternalServerError)
 			return

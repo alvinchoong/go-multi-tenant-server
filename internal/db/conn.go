@@ -14,6 +14,22 @@ type Conns struct {
 	Silos  map[string]*pgxpool.Pool
 }
 
+// Get the corresponding db conn for tenant, default to "pooled" db
+func (c *Conns) Get(ctx context.Context) *pgxpool.Pool {
+	var slug string
+	if v := ctx.Value(SlugCtxKey); v != nil {
+		if s, ok := v.(string); ok {
+			slug = s
+		}
+	}
+
+	if conn, ok := c.Silos[slug]; ok {
+		return conn
+	}
+
+	return c.Pooled
+}
+
 type ctxKey string
 
 var SlugCtxKey ctxKey = "slug"
