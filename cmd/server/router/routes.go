@@ -15,13 +15,16 @@ func Handler(ctx context.Context, conns *db.Conns, host string) *chi.Mux {
 
 	r.Use(tenantSlugMiddleware(host))
 
-	r.Post("/api/tenants", tenantCreate(conns))
-	r.Get("/api/tenants", tenantList(conns))
-
 	r.Post("/api/users", userCreate(conns))
 	r.Get("/api/users", userList(conns))
 	r.Delete("/api/users/{id}", userDelete(conns))
 	r.Get("/api/users/{id}", userGet(conns))
+
+	th := NewTodoHandler(conns)
+	r.Post("/api/todos", th.Create())
+	r.Get("/api/todos", th.List())
+	r.Delete("/api/todos/{id}", th.Delete())
+	r.Get("/api/todos/{id}", th.Get())
 
 	return r
 }
@@ -42,4 +45,12 @@ func tenantSlugMiddleware(host string) func(next http.Handler) http.Handler {
 
 		return http.HandlerFunc(fn)
 	}
+}
+
+func SlugFromCtx(ctx context.Context) string {
+	var s string
+	if v := ctx.Value(db.SlugCtxKey); v != nil {
+		s = v.(string)
+	}
+	return s
 }
