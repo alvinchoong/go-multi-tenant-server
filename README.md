@@ -14,7 +14,7 @@ For more information on how PostgreSQL's Row-Level Security can be used for mult
 
 ## Configuration
 
-1. Set the `TENANT_DB` environment variable with the mapping of `tenant slugs` to db. if unspecified for a tenant, it will default using the `pooled` db.
+1. Set the `DATABASE_SILO_RW_URLS` environment variable with the mapping of `user slugs` to db. if unspecified for a user, it will default using the `pooled` db.
 
 ## Usage
 
@@ -23,20 +23,20 @@ For more information on how PostgreSQL's Row-Level Security can be used for mult
 
 **Note:** `lvh.me` resolves to 127.0.0.1, useful for local development to simulate subdomains without modifying the hosts file.
 
-## Tenant
+## User
 
 `special.lvh.me:8080` is already set up using the "silo" partitioning model.
 
-For other tenants that should use the "pool" partitioning model follow the steps below
+For other users that should use the "pool" partitioning model follow the steps below
 
-1. Each tenant should have a unique subdomain (e.g., `tenant1.lvh.me:8080`, `tenant2.lvh.me:8080`).
-2. Use the `lvh.me:8080/api/tenants` endpoint to onboard new tenants and associate them with their subdomains.
+1. Each user should have a unique subdomain (e.g., `user1.lvh.me:8080`, `user2.lvh.me:8080`).
+2. Use the `lvh.me:8080/api/users` endpoint to onboard new users and associate them with their subdomains.
 
 ## API Endpoints
 
-- `/api/tenants`: Create tenant (GET, POST)
-- `/api/users`: Manage tenant users (GET, POST)
-- `/api/users/{id}`: Manage tenant users (GET, DELETE)
+- `/api/users`: Create user (GET, POST)
+- `/api/todos`: Manage user todos (GET, POST)
+- `/api/todos/{id}`: Manage user todos (GET, DELETE)
 
 ## Notes on Row-Level Security
 
