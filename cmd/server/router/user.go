@@ -5,45 +5,40 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"time"
 
 	"multi-tenant-server/internal/db"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgconn"
 )
 
-type user struct {
-	ID         string    `json:"id"`
-	TenantSlug string    `json:"tenant_slug"`
-	CreatedAt  time.Time `json:"created_at"`
-	UpdatedAt  time.Time `json:"updated_at"`
+type UserHandler struct {
+	queries *db.Queries
+	conns   *db.Conns
 }
 
-func userCreate(conns *db.Conns) http.HandlerFunc {
+func NewUserHandler(conns *db.Conns) UserHandler {
+	return UserHandler{
+		queries: db.New(),
+		conns:   conns,
+	}
+}
+
+func (h UserHandler) Create() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-		conn := conns.Get(ctx)
+		conn := h.conns.Get(ctx)
 
-		var u user
+		var u db.User
 		err := json.NewDecoder(r.Body).Decode(&u)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("json.Decode failed: %+v", err), http.StatusBadRequest)
 			return
 		}
 
-		err = conn.QueryRow(ctx, `
-		INSERT INTO users (id, tenant_slug) 
-		VALUES ($1, $2) RETURNING *`, u.ID, u.TenantSlug).
-			Scan(&u.ID, &u.TenantSlug, &u.CreatedAt, &u.UpdatedAt)
+		u, err = h.queries.CreateUser(ctx, conn, u.Slug)
 		if err != nil {
-			var pge *pgconn.PgError
-			if errors.As(err, &pge) && pge.Code == "42501" {
-				http.Error(w, "permission denied", http.StatusForbidden)
-				return
-			}
-			http.Error(w, fmt.Sprintf("db.Exec failed: %+v", err), http.StatusInternalServerError)
+			http.Error(w, fmt.Sprintf("CreateUser failed: %+v", err), http.StatusInternalServerError)
 			return
 		}
 
@@ -58,21 +53,14 @@ func userCreate(conns *db.Conns) http.HandlerFunc {
 	}
 }
 
-func userList(conns *db.Conns) http.HandlerFunc {
+func (h UserHandler) List() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-		conn := conns.Get(ctx)
+		conn := h.conns.Get(ctx)
 
-		rows, err := conn.Query(ctx, "SELECT * FROM users")
+		users, err := h.queries.ListUsers(ctx, conn)
 		if err != nil {
-			http.Error(w, fmt.Sprintf("db.query failed: %+v", err), http.StatusInternalServerError)
-			return
-		}
-		defer rows.Close()
-
-		users, err := pgx.CollectRows(rows, pgx.RowToStructByName[user])
-		if err != nil {
-			http.Error(w, fmt.Sprintf("pgx.CollectRows failed: %+v", err), http.StatusInternalServerError)
+			http.Error(w, fmt.Sprintf("ListUsers failed: %+v", err), http.StatusInternalServerError)
 			return
 		}
 
@@ -87,43 +75,40 @@ func userList(conns *db.Conns) http.HandlerFunc {
 	}
 }
 
-func userDelete(conns *db.Conns) http.HandlerFunc {
+func (h UserHandler) Delete() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-		conn := conns.Get(ctx)
+		conn := h.conns.Get(ctx)
 
-		id := chi.URLParam(r, "id")
+		slug := chi.URLParam(r, "slug")
 
-		res, err := conn.Exec(ctx, `DELETE FROM users WHERE id = $1`, id)
+		res, err := h.queries.DeleteUser(ctx, conn, slug)
 		if err != nil {
-			http.Error(w, fmt.Sprintf("db.query failed: %+v", err), http.StatusInternalServerError)
+			http.Error(w, fmt.Sprintf("DeleteUser failed: %+v", err), http.StatusInternalServerError)
 			return
 		}
 		if res.RowsAffected() == 0 {
 			http.Error(w, "user not found", http.StatusNotFound)
-			return
 		}
 
 		w.WriteHeader(http.StatusNoContent)
 	}
 }
 
-func userGet(conns *db.Conns) http.HandlerFunc {
+func (h UserHandler) Get() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-		conn := conns.Get(ctx)
+		conn := h.conns.Get(ctx)
 
-		id := chi.URLParam(r, "id")
+		slug := chi.URLParam(r, "slug")
 
-		var u user
-		err := conn.QueryRow(ctx, `SELECT * FROM users WHERE id = $1`, id).
-			Scan(&u.ID, &u.TenantSlug, &u.CreatedAt, &u.UpdatedAt)
+		u, err := h.queries.GetUser(ctx, conn, slug)
 		if err != nil {
 			if errors.Is(err, pgx.ErrNoRows) {
 				http.Error(w, "user not found", http.StatusNotFound)
 				return
 			}
-			http.Error(w, fmt.Sprintf("db.query failed: %+v", err), http.StatusInternalServerError)
+			http.Error(w, fmt.Sprintf("GetUser failed: %+v", err), http.StatusInternalServerError)
 			return
 		}
 

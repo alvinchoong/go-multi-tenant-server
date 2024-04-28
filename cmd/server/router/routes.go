@@ -15,10 +15,11 @@ func Handler(ctx context.Context, conns *db.Conns, host string) *chi.Mux {
 
 	r.Use(tenantSlugMiddleware(host))
 
-	r.Post("/api/users", userCreate(conns))
-	r.Get("/api/users", userList(conns))
-	r.Delete("/api/users/{id}", userDelete(conns))
-	r.Get("/api/users/{id}", userGet(conns))
+	uh := NewUserHandler(conns)
+	r.Post("/api/users", uh.Create())
+	r.Get("/api/users", uh.List())
+	r.Delete("/api/users/{slug}", uh.Delete())
+	r.Get("/api/users/{slug}", uh.Get())
 
 	th := NewTodoHandler(conns)
 	r.Post("/api/todos", th.Create())
