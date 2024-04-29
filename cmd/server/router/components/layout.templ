@@ -1,0 +1,36 @@
+package components
+
+templ Layout(body templ.Component) {
+	<!DOCTYPE html>
+	<html lang="en">
+		<head>
+			<meta charset="UTF-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+			<link href="/static/styles.css" rel="stylesheet"/>
+			<title>Go Multi Tenant</title>
+		</head>
+		<body>
+			<div class="container mx-auto">
+				@body
+			</div>
+			<div id="errors" class="fixed bottom-5 right-5"></div>
+			<script src="/static/scripts.js"></script>
+		</body>
+	</html>
+}
+
+templ Modal() {
+	<dialog
+		id="modal"
+		class="modal"
+		hx-on::after-settle="modal.showModal();loading.close()"
+	>
+		<div class="modal-box">
+			// x to close
+			<form id="modal-close" method="dialog" class="absolute right-5 top-5">
+				<button id="modal-close-btn" class="btn btn-sm btn-circle btn-ghost">✕</button>
+			</form>
+			{ children... }
+		</div>
+	</dialog>
+}
