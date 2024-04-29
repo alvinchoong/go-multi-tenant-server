@@ -39,6 +39,10 @@ wait-for-pg:
 		sleep 1; \
 	done
 
+sqlc:
+	which sqlc || go install github.com/sqlc-dev/sqlc/cmd/sqlc@v1.26.0
+	sqlc generate 
+
 bench:
 	DATABASE_POOL_RW_URL=$(DATABASE_POOL_RW_URL) \
 	go test ./... -bench=. 

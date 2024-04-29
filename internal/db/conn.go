@@ -14,13 +14,23 @@ type Conns struct {
 	Silos  map[string]*pgxpool.Pool
 }
 
-type ctxKey string
+// Get the corresponding db conn for tenant, default to "pooled" db
+func (c *Conns) Get(slug string) *pgxpool.Pool {
+	if conn, ok := c.Silos[slug]; ok {
+		return conn
+	}
 
-var SlugCtxKey ctxKey = "slug"
+	return c.Pooled
+}
 
 // Connect takes in a pooled connString and a set of connString
-func Connect(ctx context.Context, pooledConnString string, silosConnString map[string]string) (*Conns, error) {
-	pooled, err := connect(ctx, pooledConnString)
+func Connect(
+	ctx context.Context,
+	pooledConnString string,
+	silosConnString map[string]string,
+	beforeAccquire func(context.Context, *pgx.Conn) bool,
+) (*Conns, error) {
+	pooled, err := connect(ctx, pooledConnString, beforeAccquire)
 	if err != nil {
 		return nil, fmt.Errorf("connect pooled: %w", err)
 	}
@@ -28,7 +38,7 @@ func Connect(ctx context.Context, pooledConnString string, silosConnString map[s
 
 	silos := make(map[string]*pgxpool.Pool, len(silosConnString))
 	for k, v := range silosConnString {
-		conn, err := connect(ctx, v)
+		conn, err := connect(ctx, v, beforeAccquire)
 		if err != nil {
 			return nil, fmt.Errorf("connect secondary (%s): %w", k, err)
 		}
@@ -42,28 +52,17 @@ func Connect(ctx context.Context, pooledConnString string, silosConnString map[s
 	}, nil
 }
 
-func connect(ctx context.Context, connString string) (*pgxpool.Pool, error) {
+func connect(
+	ctx context.Context,
+	connString string,
+	beforeAccquire func(context.Context, *pgx.Conn) bool,
+) (*pgxpool.Pool, error) {
 	cfg, err := pgxpool.ParseConfig(connString)
 	if err != nil {
 		return nil, fmt.Errorf("pgxpool.ParseConfig: %w", err)
 	}
 
-	cfg.BeforeAcquire = func(ctx context.Context, conn *pgx.Conn) bool {
-		slog.Debug("acquiring conn..")
-		if v := ctx.Value(SlugCtxKey); v != nil {
-			if slug, ok := v.(string); ok {
-				// set the tenant id for the current session
-				rows, err := conn.Query(ctx, "SELECT set_config('app.current_tenant', $1, false)", slug)
-				if err != nil {
-					// log the error, and then `return false` to destroy this connection instead of leaving it open.
-					slog.Error("BeforeAcquire conn.Exec", slog.Any("err", err))
-					return false
-				}
-				rows.Close()
-			}
-		}
-		return true
-	}
+	cfg.BeforeAcquire = beforeAccquire
 
 	conn, err := pgxpool.NewWithConfig(ctx, cfg)
 	if err != nil {
