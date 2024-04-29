@@ -20,11 +20,13 @@ dev:
 		--build.pre_cmd "make gen" \
 		--build.cmd "go build -o bin/server cmd/server/main.go" \
 		--build.bin "./bin/server" \
-		--build.include_ext "go,css,js" \
-		--build.exclude_dir "tmp,vendor,node_modules,.parcel-cache,cmd/server/router/static"
+		--build.include_ext "go,css,js,templ" \
+		--build.exclude_dir "tmp,vendor,node_modules,.parcel-cache,cmd/server/router/static" \
+		--build.exclude_regex ".*_templ.go"
 
 gen:
 	npm run build
+	templ generate
 
 sqlc:
 	which sqlc || go install github.com/sqlc-dev/sqlc/cmd/sqlc@v1.26.0
