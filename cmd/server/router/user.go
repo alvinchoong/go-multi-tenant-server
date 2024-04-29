@@ -25,100 +25,92 @@ func NewUserHandler(conns *db.Conns) UserHandler {
 }
 
 func (h UserHandler) Create() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+	return slugHandler(func(w http.ResponseWriter, r *http.Request, slug string) error {
 		ctx := r.Context()
-		conn := h.conns.Get(ctx)
+		conn := h.conns.Get(slug)
 
 		var u db.User
 		err := json.NewDecoder(r.Body).Decode(&u)
 		if err != nil {
-			http.Error(w, fmt.Sprintf("json.Decode failed: %+v", err), http.StatusBadRequest)
-			return
+			return fmt.Errorf("json.Decode failed: %w", err)
 		}
 
 		u, err = h.queries.CreateUser(ctx, conn, u.Slug)
 		if err != nil {
-			http.Error(w, fmt.Sprintf("CreateUser failed: %+v", err), http.StatusInternalServerError)
-			return
+			return fmt.Errorf("CreateUser failed: %w", err)
 		}
 
 		b, err := json.Marshal(u)
 		if err != nil {
-			http.Error(w, fmt.Sprintf("json.Marshal failed: %+v", err), http.StatusInternalServerError)
-			return
+			return fmt.Errorf("json.Marshal failed: %w", err)
 		}
 
-		w.Header().Set("Content-Type", "application/json")
 		w.Write(b)
-	}
+
+		return nil
+	})
 }
 
 func (h UserHandler) List() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+	return slugHandler(func(w http.ResponseWriter, r *http.Request, slug string) error {
 		ctx := r.Context()
-		conn := h.conns.Get(ctx)
+		conn := h.conns.Get(slug)
 
 		users, err := h.queries.ListUsers(ctx, conn)
 		if err != nil {
-			http.Error(w, fmt.Sprintf("ListUsers failed: %+v", err), http.StatusInternalServerError)
-			return
+			return fmt.Errorf("ListUsers failed: %w", err)
 		}
 
 		b, err := json.Marshal(users)
 		if err != nil {
-			http.Error(w, fmt.Sprintf("json.Marshal failed: %+v", err), http.StatusInternalServerError)
-			return
+			return fmt.Errorf("json.Marshal failed: %w", err)
 		}
 
-		w.Header().Set("Content-Type", "application/json")
 		w.Write(b)
-	}
+
+		return nil
+	})
 }
 
 func (h UserHandler) Delete() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+	return slugHandler(func(w http.ResponseWriter, r *http.Request, slug string) error {
 		ctx := r.Context()
-		conn := h.conns.Get(ctx)
+		conn := h.conns.Get(slug)
 
-		slug := chi.URLParam(r, "slug")
-
-		res, err := h.queries.DeleteUser(ctx, conn, slug)
+		res, err := h.queries.DeleteUser(ctx, conn, chi.URLParam(r, "slug"))
 		if err != nil {
-			http.Error(w, fmt.Sprintf("DeleteUser failed: %+v", err), http.StatusInternalServerError)
-			return
+			return fmt.Errorf("DeleteUser failed: %w", err)
 		}
 		if res.RowsAffected() == 0 {
 			http.Error(w, "user not found", http.StatusNotFound)
 		}
 
 		w.WriteHeader(http.StatusNoContent)
-	}
+
+		return nil
+	})
 }
 
 func (h UserHandler) Get() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+	return slugHandler(func(w http.ResponseWriter, r *http.Request, slug string) error {
 		ctx := r.Context()
-		conn := h.conns.Get(ctx)
+		conn := h.conns.Get(slug)
 
-		slug := chi.URLParam(r, "slug")
-
-		u, err := h.queries.GetUser(ctx, conn, slug)
+		u, err := h.queries.GetUser(ctx, conn, chi.URLParam(r, "slug"))
 		if err != nil {
 			if errors.Is(err, pgx.ErrNoRows) {
-				http.Error(w, "user not found", http.StatusNotFound)
-				return
+				return fmt.Errorf("user not found")
 			}
-			http.Error(w, fmt.Sprintf("GetUser failed: %+v", err), http.StatusInternalServerError)
-			return
+			return fmt.Errorf("GetUser failed: %w", err)
 		}
 
 		b, err := json.Marshal(u)
 		if err != nil {
-			http.Error(w, fmt.Sprintf("json.Marshal failed: %+v", err), http.StatusInternalServerError)
-			return
+			return fmt.Errorf("json.Marshal failed: %w", err)
 		}
 
-		w.Header().Set("Content-Type", "application/json")
 		w.Write(b)
-	}
+
+		return nil
+	})
 }

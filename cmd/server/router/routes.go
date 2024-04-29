@@ -2,8 +2,6 @@ package router
 
 import (
 	"context"
-	"net/http"
-	"strings"
 
 	"multi-tenant-server/internal/db"
 
@@ -13,7 +11,7 @@ import (
 func Handler(ctx context.Context, conns *db.Conns, host string) *chi.Mux {
 	r := chi.NewRouter()
 
-	r.Use(tenantSlugMiddleware(host))
+	r.Use(slugMiddleware(host))
 
 	uh := NewUserHandler(conns)
 	r.Post("/api/users", uh.Create())
@@ -28,30 +26,4 @@ func Handler(ctx context.Context, conns *db.Conns, host string) *chi.Mux {
 	r.Get("/api/todos/{id}", th.Get())
 
 	return r
-}
-
-// tenantSlugMiddleware extract subdomain from request and set it in the context
-func tenantSlugMiddleware(host string) func(next http.Handler) http.Handler {
-	return func(next http.Handler) http.Handler {
-		fn := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			ctx := r.Context()
-
-			subdomain := strings.TrimSuffix(r.Host, "."+host)
-			if subdomain != "" && subdomain != host {
-				ctx = context.WithValue(ctx, db.SlugCtxKey, subdomain)
-			}
-
-			next.ServeHTTP(w, r.WithContext(ctx))
-		})
-
-		return http.HandlerFunc(fn)
-	}
-}
-
-func SlugFromCtx(ctx context.Context) string {
-	var s string
-	if v := ctx.Value(db.SlugCtxKey); v != nil {
-		s = v.(string)
-	}
-	return s
 }
