@@ -17,10 +17,14 @@ dev:
 	which air || go install github.com/cosmtrek/air@latest
 	$(shell cat .env | egrep -v '^#' | xargs -0) \
 	air --build.delay=1000 \
+		--build.pre_cmd "make gen" \
 		--build.cmd "go build -o bin/server cmd/server/main.go" \
 		--build.bin "./bin/server" \
-		--build.include_ext "go" \
-		--build.exclude_dir "tmp,vendor,testdata" \
+		--build.include_ext "go,css,js" \
+		--build.exclude_dir "tmp,vendor,node_modules,.parcel-cache,cmd/server/router/static"
+
+gen:
+	npm run build
 
 sqlc:
 	which sqlc || go install github.com/sqlc-dev/sqlc/cmd/sqlc@v1.26.0
