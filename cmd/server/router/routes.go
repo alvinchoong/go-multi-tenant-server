@@ -2,15 +2,24 @@ package router
 
 import (
 	"context"
+	"embed"
+	"net/http"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
+//go:embed static/*
+var staticContent embed.FS
+
 func Handler(ctx context.Context, conns *pgxpool.Pool, host string) *chi.Mux {
 	r := chi.NewRouter()
 
 	r.Use(extractTenantMiddleware(host))
+
+	// Serve static files from the embedded filesystem
+	fs := http.FileServer(http.FS(staticContent))
+	r.Get("/static/*", fs.ServeHTTP)
 
 	uh := NewUserHandler(conns)
 	r.Post("/api/users", uh.Create())
