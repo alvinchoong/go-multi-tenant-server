@@ -13,8 +13,8 @@ import (
 )
 
 const CreateTodo = `-- name: CreateTodo :one
-INSERT INTO todos (title, description, user_slug) 
-VALUES ($1,$2,$3)
+INSERT INTO todos (title, description, user_slug, completed) 
+VALUES ($1,$2,$3,$4)
 RETURNING id, title, description, completed, user_slug, created_at, updated_at
 `
 
@@ -22,10 +22,16 @@ type CreateTodoParams struct {
 	Title       string  `json:"title"`
 	Description *string `json:"description"`
 	UserSlug    string  `json:"user_slug"`
+	Completed   bool    `json:"completed"`
 }
 
 func (q *Queries) CreateTodo(ctx context.Context, db DBTX, arg CreateTodoParams) (Todo, error) {
-	row := db.QueryRow(ctx, CreateTodo, arg.Title, arg.Description, arg.UserSlug)
+	row := db.QueryRow(ctx, CreateTodo,
+		arg.Title,
+		arg.Description,
+		arg.UserSlug,
+		arg.Completed,
+	)
 	var i Todo
 	err := row.Scan(
 		&i.ID,
@@ -100,12 +106,53 @@ func (q *Queries) ListTodos(ctx context.Context, db DBTX) ([]Todo, error) {
 	return items, nil
 }
 
-const UpdateTodo = `-- name: UpdateTodo :execresult
+const PatchTodo = `-- name: PatchTodo :one
+UPDATE todos SET 
+  title = COALESCE($2, title),
+  description = COALESCE($3, description),
+  completed = COALESCE($4, completed),
+  user_slug = COALESCE($5, user_slug)
+WHERE id = $1
+RETURNING id, title, description, completed, user_slug, created_at, updated_at
+`
+
+type PatchTodoParams struct {
+	ID          uuid.UUID `json:"id"`
+	Title       *string   `json:"title"`
+	Description *string   `json:"description"`
+	Completed   *bool     `json:"completed"`
+	UserSlug    *string   `json:"user_slug"`
+}
+
+func (q *Queries) PatchTodo(ctx context.Context, db DBTX, arg PatchTodoParams) (Todo, error) {
+	row := db.QueryRow(ctx, PatchTodo,
+		arg.ID,
+		arg.Title,
+		arg.Description,
+		arg.Completed,
+		arg.UserSlug,
+	)
+	var i Todo
+	err := row.Scan(
+		&i.ID,
+		&i.Title,
+		&i.Description,
+		&i.Completed,
+		&i.UserSlug,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const UpdateTodo = `-- name: UpdateTodo :one
 UPDATE todos SET 
   title = $2,
   description = $3,
-  completed = $4
+  completed = $4,
+  user_slug = $5
 WHERE id = $1
+RETURNING id, title, description, completed, user_slug, created_at, updated_at
 `
 
 type UpdateTodoParams struct {
@@ -113,13 +160,26 @@ type UpdateTodoParams struct {
 	Title       string    `json:"title"`
 	Description *string   `json:"description"`
 	Completed   bool      `json:"completed"`
+	UserSlug    string    `json:"user_slug"`
 }
 
-func (q *Queries) UpdateTodo(ctx context.Context, db DBTX, arg UpdateTodoParams) (pgconn.CommandTag, error) {
-	return db.Exec(ctx, UpdateTodo,
+func (q *Queries) UpdateTodo(ctx context.Context, db DBTX, arg UpdateTodoParams) (Todo, error) {
+	row := db.QueryRow(ctx, UpdateTodo,
 		arg.ID,
 		arg.Title,
 		arg.Description,
 		arg.Completed,
+		arg.UserSlug,
 	)
+	var i Todo
+	err := row.Scan(
+		&i.ID,
+		&i.Title,
+		&i.Description,
+		&i.Completed,
+		&i.UserSlug,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
 }

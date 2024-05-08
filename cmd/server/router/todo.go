@@ -26,7 +26,7 @@ func NewTodoHandler(conn db.DBTX) TodoHandler {
 }
 
 func (h TodoHandler) Create() http.HandlerFunc {
-	return slugHandler(func(w http.ResponseWriter, r *http.Request, slug string) error {
+	return slugHandler(func(w http.ResponseWriter, r *http.Request, _ string) error {
 		ctx := r.Context()
 
 		var todo db.Todo
@@ -38,7 +38,8 @@ func (h TodoHandler) Create() http.HandlerFunc {
 		todo, err = h.queries.CreateTodo(ctx, h.conn, db.CreateTodoParams{
 			Title:       todo.Title,
 			Description: todo.Description,
-			UserSlug:    slug,
+			Completed:   todo.Completed,
+			UserSlug:    todo.UserSlug,
 		})
 		if err != nil {
 			return fmt.Errorf("create todo failed: %w", err)
@@ -113,6 +114,87 @@ func (h TodoHandler) Get() http.HandlerFunc {
 				return fmt.Errorf("todo not found")
 			}
 			return fmt.Errorf("get todo failed: %w", err)
+		}
+
+		b, err := json.Marshal(todo)
+		if err != nil {
+			return fmt.Errorf("json.Marshal failed: %w", err)
+		}
+
+		w.Write(b)
+
+		return nil
+	})
+}
+
+func (h TodoHandler) Update() http.HandlerFunc {
+	return slugHandler(func(w http.ResponseWriter, r *http.Request, _ string) error {
+		ctx := r.Context()
+
+		id, err := uuid.Parse(chi.URLParam(r, "id"))
+		if err != nil {
+			return fmt.Errorf("invalid todo id: %w", err)
+		}
+
+		var todo db.Todo
+		err = json.NewDecoder(r.Body).Decode(&todo)
+		if err != nil {
+			return fmt.Errorf("json.Decode failed: %w", err)
+		}
+
+		todo, err = h.queries.UpdateTodo(ctx, h.conn, db.UpdateTodoParams{
+			ID:          id,
+			Title:       todo.Title,
+			Description: todo.Description,
+			Completed:   todo.Completed,
+			UserSlug:    todo.UserSlug,
+		})
+		if err != nil {
+			return fmt.Errorf("create todo failed: %w", err)
+		}
+
+		b, err := json.Marshal(todo)
+		if err != nil {
+			return fmt.Errorf("json.Marshal failed: %w", err)
+		}
+
+		w.Write(b)
+
+		return nil
+	})
+}
+
+type todoPatchInput struct {
+	Title       *string `json:"title"`
+	Description *string `json:"description"`
+	Completed   *bool   `json:"completed"`
+	UserSlug    *string `json:"user_slug"`
+}
+
+func (h TodoHandler) Patch() http.HandlerFunc {
+	return slugHandler(func(w http.ResponseWriter, r *http.Request, _ string) error {
+		ctx := r.Context()
+
+		id, err := uuid.Parse(chi.URLParam(r, "id"))
+		if err != nil {
+			return fmt.Errorf("invalid todo id: %w", err)
+		}
+
+		var input todoPatchInput
+		err = json.NewDecoder(r.Body).Decode(&input)
+		if err != nil {
+			return fmt.Errorf("json.Decode failed: %w", err)
+		}
+
+		todo, err := h.queries.PatchTodo(ctx, h.conn, db.PatchTodoParams{
+			ID:          id,
+			Title:       input.Title,
+			Description: input.Description,
+			Completed:   input.Completed,
+			UserSlug:    input.UserSlug,
+		})
+		if err != nil {
+			return fmt.Errorf("create todo failed: %w", err)
 		}
 
 		b, err := json.Marshal(todo)
