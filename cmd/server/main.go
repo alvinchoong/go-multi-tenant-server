@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -35,15 +34,9 @@ func errmain(ctx context.Context) error {
 		Level: level,
 	})))
 
-	// connect to db
-	var silosDB map[string]string
-	if s := os.Getenv("DATABASE_SILO_RW_URLS"); len(s) > 0 {
-		if err := json.Unmarshal([]byte(s), &silosDB); err != nil {
-			return fmt.Errorf("json.Unmarshal: %w", err)
-		}
-	}
-
+	// db hook before acquiring a connection
 	beforeAcquire := func(ctx context.Context, conn *pgx.Conn) bool {
+		// extracts the slug from context and set it to the life span of the connection
 		if s := router.SlugFromCtx(ctx); s != "" {
 			// set the user for the current session
 			rows, err := conn.Query(ctx, "SELECT set_config('app.current_user', $1, false)", s)
@@ -57,7 +50,8 @@ func errmain(ctx context.Context) error {
 		return true
 	}
 
-	conns, err := db.Connect(ctx, os.Getenv("DATABASE_POOL_RW_URL"), silosDB, beforeAcquire)
+	// connect to db
+	conns, err := db.Connect(ctx, os.Getenv("DATABASE_URL"), beforeAcquire)
 	if err != nil {
 		return fmt.Errorf("db.Connect: %w", err)
 	}

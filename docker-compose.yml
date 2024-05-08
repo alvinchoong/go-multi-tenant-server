@@ -1,22 +1,10 @@
 version: "3.6"
 services:
-  db-pool:
+  db:
     image: postgres:15.4
     restart: always
     ports:
       - "5432:5432"
-    environment:
-      POSTGRES_USER: su
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: appdb
-    volumes:
-      - ./database/init/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
-
-  db-silo:
-    image: postgres:15.4
-    restart: always
-    ports:
-      - "5433:5432"
     environment:
       POSTGRES_USER: su
       POSTGRES_PASSWORD: password

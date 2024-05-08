@@ -38,6 +38,7 @@ func slugMiddleware(host string) func(next http.Handler) http.Handler {
 	}
 }
 
+// slugHandler wraps a custom handler into http.HandlerFunc
 func slugHandler(fn func(w http.ResponseWriter, r *http.Request, slug string) error) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()

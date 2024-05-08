@@ -3,12 +3,11 @@ package router
 import (
 	"context"
 
-	"multi-tenant-server/internal/db"
-
 	"github.com/go-chi/chi/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func Handler(ctx context.Context, conns *db.Conns, host string) *chi.Mux {
+func Handler(ctx context.Context, conns *pgxpool.Pool, host string) *chi.Mux {
 	r := chi.NewRouter()
 
 	r.Use(slugMiddleware(host))

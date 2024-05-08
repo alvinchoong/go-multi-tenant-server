@@ -14,20 +14,19 @@ import (
 
 type UserHandler struct {
 	queries *db.Queries
-	conns   *db.Conns
+	conn    db.DBTX
 }
 
-func NewUserHandler(conns *db.Conns) UserHandler {
+func NewUserHandler(conn db.DBTX) UserHandler {
 	return UserHandler{
 		queries: db.New(),
-		conns:   conns,
+		conn:    conn,
 	}
 }
 
 func (h UserHandler) Create() http.HandlerFunc {
-	return slugHandler(func(w http.ResponseWriter, r *http.Request, slug string) error {
+	return slugHandler(func(w http.ResponseWriter, r *http.Request, _ string) error {
 		ctx := r.Context()
-		conn := h.conns.Get(slug)
 
 		var u db.User
 		err := json.NewDecoder(r.Body).Decode(&u)
@@ -35,7 +34,7 @@ func (h UserHandler) Create() http.HandlerFunc {
 			return fmt.Errorf("json.Decode failed: %w", err)
 		}
 
-		u, err = h.queries.CreateUser(ctx, conn, u.Slug)
+		u, err = h.queries.CreateUser(ctx, h.conn, u.Slug)
 		if err != nil {
 			return fmt.Errorf("CreateUser failed: %w", err)
 		}
@@ -52,11 +51,10 @@ func (h UserHandler) Create() http.HandlerFunc {
 }
 
 func (h UserHandler) List() http.HandlerFunc {
-	return slugHandler(func(w http.ResponseWriter, r *http.Request, slug string) error {
+	return slugHandler(func(w http.ResponseWriter, r *http.Request, _ string) error {
 		ctx := r.Context()
-		conn := h.conns.Get(slug)
 
-		users, err := h.queries.ListUsers(ctx, conn)
+		users, err := h.queries.ListUsers(ctx, h.conn)
 		if err != nil {
 			return fmt.Errorf("ListUsers failed: %w", err)
 		}
@@ -73,11 +71,10 @@ func (h UserHandler) List() http.HandlerFunc {
 }
 
 func (h UserHandler) Delete() http.HandlerFunc {
-	return slugHandler(func(w http.ResponseWriter, r *http.Request, slug string) error {
+	return slugHandler(func(w http.ResponseWriter, r *http.Request, _ string) error {
 		ctx := r.Context()
-		conn := h.conns.Get(slug)
 
-		res, err := h.queries.DeleteUser(ctx, conn, chi.URLParam(r, "slug"))
+		res, err := h.queries.DeleteUser(ctx, h.conn, chi.URLParam(r, "slug"))
 		if err != nil {
 			return fmt.Errorf("DeleteUser failed: %w", err)
 		}
@@ -92,11 +89,10 @@ func (h UserHandler) Delete() http.HandlerFunc {
 }
 
 func (h UserHandler) Get() http.HandlerFunc {
-	return slugHandler(func(w http.ResponseWriter, r *http.Request, slug string) error {
+	return slugHandler(func(w http.ResponseWriter, r *http.Request, _ string) error {
 		ctx := r.Context()
-		conn := h.conns.Get(slug)
 
-		u, err := h.queries.GetUser(ctx, conn, chi.URLParam(r, "slug"))
+		u, err := h.queries.GetUser(ctx, h.conn, chi.URLParam(r, "slug"))
 		if err != nil {
 			if errors.Is(err, pgx.ErrNoRows) {
 				return fmt.Errorf("user not found")
