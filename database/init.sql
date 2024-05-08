@@ -1,15 +1,15 @@
+-- Ensure that the citext and pgcrypto extensions are available in the database.
 CREATE EXTENSION IF NOT EXISTS citext;
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
--- Creates rw role
--- the default role will be a superuser (rolsuper = true) and has the BYPASSRLS privilege (rolbypassrls = true).
--- which have the ability to bypass row-level security (RLS) policies.
+-- Create a role `rw` with login permission and no superuser or RLS-bypass privileges.
+-- This role will be used by the app, as configured in the `.env` file.
 CREATE ROLE rw WITH LOGIN PASSWORD 'password' NOSUPERUSER NOCREATEDB NOCREATEROLE;
 
--- Grant all privileges on future tables to rw
+-- Grant the `rw` role all privileges on tables created in the `public` schema.
 ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL PRIVILEGES ON TABLES TO rw;
 
--- Create tables
+-- Create the `users` table:
 CREATE TABLE users (
   slug citext PRIMARY KEY,
   description TEXT,
@@ -17,6 +17,7 @@ CREATE TABLE users (
   updated_at timestamptz NOT NULL DEFAULT NOW()
 );
 
+-- Create the `todos` table:
 CREATE TABLE todos (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   title TEXT NOT NULL,
@@ -29,23 +30,25 @@ CREATE TABLE todos (
     ON UPDATE CASCADE ON DELETE CASCADE
 );
 
--- Row Level Security (RLS) Policy
+-- Define Row-Level Security (RLS) policies:
+
+ -- Access to rows in the `users` table is restricted by a policy that compares the `slug` column with the `current session's tenant`
 CREATE POLICY user_isolation_policy ON users
   USING (slug = current_setting('app.current_user'));
 
+ -- The `todos` table has a similar policy restricting rows based on the `current session's tenant`
 CREATE POLICY todo_isolation_policy ON todos
   USING (user_slug = current_setting('app.current_user'));
 
--- Enable RLS
+-- Enable RLS on the `users` and `todos` tables.
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE todos ENABLE ROW LEVEL SECURITY;
 
--- Force RLS on table owner
--- by default table owner bypasses row-level security
+-- Force RLS enforcement on the `users` and `todos` tables, even for the table owner.
 ALTER TABLE users FORCE ROW LEVEL SECURITY;
 ALTER TABLE todos FORCE ROW LEVEL SECURITY;
 
--- Seed users
+-- Seed the `users` table with initial data:
 INSERT INTO users (slug, description)
 VALUES
   ('user-1', 'default user 1 description'),

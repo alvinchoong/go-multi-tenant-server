@@ -9,7 +9,7 @@ import (
 // ctxKey is a custom type for context keys
 type ctxKey string
 
-// SlugCtxKey is a context key for the slug
+// SlugCtxKey is the context key used for storing the slug (subdomain) information
 var SlugCtxKey ctxKey = "slug"
 
 // SlugFromCtx extract slug from the context
@@ -20,17 +20,20 @@ func SlugFromCtx(ctx context.Context) string {
 	return ""
 }
 
-// slugMiddleware extract subdomain from request and set it in the context
+// slugMiddleware extracts the subdomain (tenant identifier) and adds it to the request context
 func slugMiddleware(host string) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		fn := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
 
+			// Extract the subdomain (slug) from the host by removing the primary domain
 			subdomain := strings.TrimSuffix(r.Host, "."+host)
 			if subdomain != "" && subdomain != host {
+				// Store the subdomain in the request context for future use
 				ctx = context.WithValue(ctx, SlugCtxKey, subdomain)
 			}
 
+			// Serve the request with the modified context
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 
