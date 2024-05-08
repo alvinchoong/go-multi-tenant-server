@@ -73,24 +73,6 @@ func (h UserHandler) List() http.HandlerFunc {
 	})
 }
 
-func (h UserHandler) Delete() http.HandlerFunc {
-	return slugHandler(func(w http.ResponseWriter, r *http.Request, _ string) error {
-		ctx := r.Context()
-
-		res, err := h.queries.DeleteUser(ctx, h.conn, chi.URLParam(r, "slug"))
-		if err != nil {
-			return fmt.Errorf("DeleteUser failed: %w", err)
-		}
-		if res.RowsAffected() == 0 {
-			return errors.New("user not found")
-		}
-
-		w.WriteHeader(http.StatusNoContent)
-
-		return nil
-	})
-}
-
 func (h UserHandler) Get() http.HandlerFunc {
 	return slugHandler(func(w http.ResponseWriter, r *http.Request, _ string) error {
 		ctx := r.Context()
@@ -138,6 +120,24 @@ func (h UserHandler) Update() http.HandlerFunc {
 		}
 
 		w.Write(b)
+
+		return nil
+	})
+}
+
+func (h UserHandler) Delete() http.HandlerFunc {
+	return slugHandler(func(w http.ResponseWriter, r *http.Request, _ string) error {
+		ctx := r.Context()
+
+		res, err := h.queries.DeleteUser(ctx, h.conn, chi.URLParam(r, "slug"))
+		if err != nil {
+			return fmt.Errorf("DeleteUser failed: %w", err)
+		}
+		if res.RowsAffected() == 0 {
+			return errors.New("user not found")
+		}
+
+		w.WriteHeader(http.StatusNoContent)
 
 		return nil
 	})

@@ -76,29 +76,6 @@ func (h TodoHandler) List() http.HandlerFunc {
 	})
 }
 
-func (h TodoHandler) Delete() http.HandlerFunc {
-	return slugHandler(func(w http.ResponseWriter, r *http.Request, _ string) error {
-		ctx := r.Context()
-
-		id, err := uuid.Parse(chi.URLParam(r, "id"))
-		if err != nil {
-			return fmt.Errorf("invalid todo id: %w", err)
-		}
-
-		res, err := h.queries.DeleteTodo(ctx, h.conn, id)
-		if err != nil {
-			return fmt.Errorf("delete todo failed: %w", err)
-		}
-		if res.RowsAffected() == 0 {
-			return fmt.Errorf("todo not found")
-		}
-
-		w.WriteHeader(http.StatusNoContent)
-
-		return nil
-	})
-}
-
 func (h TodoHandler) Get() http.HandlerFunc {
 	return slugHandler(func(w http.ResponseWriter, r *http.Request, _ string) error {
 		ctx := r.Context()
@@ -203,6 +180,29 @@ func (h TodoHandler) Patch() http.HandlerFunc {
 		}
 
 		w.Write(b)
+
+		return nil
+	})
+}
+
+func (h TodoHandler) Delete() http.HandlerFunc {
+	return slugHandler(func(w http.ResponseWriter, r *http.Request, _ string) error {
+		ctx := r.Context()
+
+		id, err := uuid.Parse(chi.URLParam(r, "id"))
+		if err != nil {
+			return fmt.Errorf("invalid todo id: %w", err)
+		}
+
+		res, err := h.queries.DeleteTodo(ctx, h.conn, id)
+		if err != nil {
+			return fmt.Errorf("delete todo failed: %w", err)
+		}
+		if res.RowsAffected() == 0 {
+			return fmt.Errorf("todo not found")
+		}
+
+		w.WriteHeader(http.StatusNoContent)
 
 		return nil
 	})
