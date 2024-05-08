@@ -30,4 +30,4 @@ bench:
 	DATABASE_URL=$(DATABASE_URL) go test ./... -bench=. 
 
 test-api:
-	newman run docs/multi-tenant.postman_collection.json
+	newman run docs/multi-tenant-test.postman_collection.json

@@ -1,0 +1,373 @@
+{
+	"info": {
+		"_postman_id": "34e73f64-0240-43f5-ab6a-e72368a1196d",
+		"name": "multi-tenant-api",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "1635972"
+	},
+	"item": [
+		{
+			"name": "user",
+			"item": [
+				{
+					"name": "list",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{user}}.lvh.me:8080/api/users",
+							"host": [
+								"{{user}}",
+								"lvh",
+								"me"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"users"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "create",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"slug\": \"{{user}}\",\n    \"description\": \"some description\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{user}}.lvh.me:8080/api/users",
+							"host": [
+								"{{user}}",
+								"lvh",
+								"me"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"users"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{user}}.lvh.me:8080/api/users/:slug",
+							"host": [
+								"{{user}}",
+								"lvh",
+								"me"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"users",
+								":slug"
+							],
+							"variable": [
+								{
+									"key": "slug",
+									"value": "{{user}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "update",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"description\": \"another description\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{user}}.lvh.me:8080/api/users/:slug",
+							"host": [
+								"{{user}}",
+								"lvh",
+								"me"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"users",
+								":slug"
+							],
+							"variable": [
+								{
+									"key": "slug",
+									"value": "{{user}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "delete",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{user}}.lvh.me:8080/api/users/:slug",
+							"host": [
+								"{{user}}",
+								"lvh",
+								"me"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"users",
+								":slug"
+							],
+							"variable": [
+								{
+									"key": "slug",
+									"value": "{{user}}"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "todo",
+			"item": [
+				{
+					"name": "list",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{user}}.lvh.me:8080/api/todos",
+							"host": [
+								"{{user}}",
+								"lvh",
+								"me"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"todos"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "create",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"My Task\",\n    \"description\": \"task description\",\n    \"completed\": false,\n    \"user_slug\": \"{{user}}\"\n}\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{user}}.lvh.me:8080/api/todos",
+							"host": [
+								"{{user}}",
+								"lvh",
+								"me"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"todos"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{user}}.lvh.me:8080/api/todos/:id",
+							"host": [
+								"{{user}}",
+								"lvh",
+								"me"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"todos",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": ""
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "update",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"My Updated Task\",\n    \"description\": \"updated task description\",\n    \"completed\": true,\n    \"user_slug\": \"{{user}}\"\n}\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{user}}.lvh.me:8080/api/todos/:id",
+							"host": [
+								"{{user}}",
+								"lvh",
+								"me"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"todos",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": ""
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "patch",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"completed\": true\n}\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{user}}.lvh.me:8080/api/todos/:id",
+							"host": [
+								"{{user}}",
+								"lvh",
+								"me"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"todos",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": ""
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "delete",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{user}}.lvh.me:8080/api/todos/:id",
+							"host": [
+								"{{user}}",
+								"lvh",
+								"me"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"todos",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": ""
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "user",
+			"value": "user-1"
+		}
+	]
+}
