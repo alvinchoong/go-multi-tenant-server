@@ -12,15 +12,25 @@ import (
 )
 
 const CreateUser = `-- name: CreateUser :one
-INSERT INTO users (slug) 
-VALUES ($1)
-RETURNING slug, created_at, updated_at
+INSERT INTO users (slug, description) 
+VALUES ($1,$2)
+RETURNING slug, description, created_at, updated_at
 `
 
-func (q *Queries) CreateUser(ctx context.Context, db DBTX, slug string) (User, error) {
-	row := db.QueryRow(ctx, CreateUser, slug)
+type CreateUserParams struct {
+	Slug        string  `json:"slug"`
+	Description *string `json:"description"`
+}
+
+func (q *Queries) CreateUser(ctx context.Context, db DBTX, arg CreateUserParams) (User, error) {
+	row := db.QueryRow(ctx, CreateUser, arg.Slug, arg.Description)
 	var i User
-	err := row.Scan(&i.Slug, &i.CreatedAt, &i.UpdatedAt)
+	err := row.Scan(
+		&i.Slug,
+		&i.Description,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
 	return i, err
 }
 
@@ -34,19 +44,24 @@ func (q *Queries) DeleteUser(ctx context.Context, db DBTX, slug string) (pgconn.
 }
 
 const GetUser = `-- name: GetUser :one
-SELECT slug, created_at, updated_at FROM users 
+SELECT slug, description, created_at, updated_at FROM users 
 WHERE slug = $1
 `
 
 func (q *Queries) GetUser(ctx context.Context, db DBTX, slug string) (User, error) {
 	row := db.QueryRow(ctx, GetUser, slug)
 	var i User
-	err := row.Scan(&i.Slug, &i.CreatedAt, &i.UpdatedAt)
+	err := row.Scan(
+		&i.Slug,
+		&i.Description,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
 	return i, err
 }
 
 const ListUsers = `-- name: ListUsers :many
-SELECT slug, created_at, updated_at FROM users
+SELECT slug, description, created_at, updated_at FROM users
 `
 
 func (q *Queries) ListUsers(ctx context.Context, db DBTX) ([]User, error) {
@@ -58,7 +73,12 @@ func (q *Queries) ListUsers(ctx context.Context, db DBTX) ([]User, error) {
 	items := []User{}
 	for rows.Next() {
 		var i User
-		if err := rows.Scan(&i.Slug, &i.CreatedAt, &i.UpdatedAt); err != nil {
+		if err := rows.Scan(
+			&i.Slug,
+			&i.Description,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -67,4 +87,28 @@ func (q *Queries) ListUsers(ctx context.Context, db DBTX) ([]User, error) {
 		return nil, err
 	}
 	return items, nil
+}
+
+const UpdateUser = `-- name: UpdateUser :one
+UPDATE users 
+SET description=$2
+WHERE slug = $1
+RETURNING slug, description, created_at, updated_at
+`
+
+type UpdateUserParams struct {
+	Slug        string  `json:"slug"`
+	Description *string `json:"description"`
+}
+
+func (q *Queries) UpdateUser(ctx context.Context, db DBTX, arg UpdateUserParams) (User, error) {
+	row := db.QueryRow(ctx, UpdateUser, arg.Slug, arg.Description)
+	var i User
+	err := row.Scan(
+		&i.Slug,
+		&i.Description,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
 }

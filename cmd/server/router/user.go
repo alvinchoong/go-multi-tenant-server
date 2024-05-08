@@ -28,18 +28,21 @@ func (h UserHandler) Create() http.HandlerFunc {
 	return slugHandler(func(w http.ResponseWriter, r *http.Request, _ string) error {
 		ctx := r.Context()
 
-		var u db.User
-		err := json.NewDecoder(r.Body).Decode(&u)
+		var user db.User
+		err := json.NewDecoder(r.Body).Decode(&user)
 		if err != nil {
 			return fmt.Errorf("json.Decode failed: %w", err)
 		}
 
-		u, err = h.queries.CreateUser(ctx, h.conn, u.Slug)
+		user, err = h.queries.CreateUser(ctx, h.conn, db.CreateUserParams{
+			Slug:        user.Slug,
+			Description: user.Description,
+		})
 		if err != nil {
 			return fmt.Errorf("CreateUser failed: %w", err)
 		}
 
-		b, err := json.Marshal(u)
+		b, err := json.Marshal(user)
 		if err != nil {
 			return fmt.Errorf("json.Marshal failed: %w", err)
 		}
@@ -79,7 +82,7 @@ func (h UserHandler) Delete() http.HandlerFunc {
 			return fmt.Errorf("DeleteUser failed: %w", err)
 		}
 		if res.RowsAffected() == 0 {
-			http.Error(w, "user not found", http.StatusNotFound)
+			return errors.New("user not found")
 		}
 
 		w.WriteHeader(http.StatusNoContent)
@@ -92,7 +95,7 @@ func (h UserHandler) Get() http.HandlerFunc {
 	return slugHandler(func(w http.ResponseWriter, r *http.Request, _ string) error {
 		ctx := r.Context()
 
-		u, err := h.queries.GetUser(ctx, h.conn, chi.URLParam(r, "slug"))
+		user, err := h.queries.GetUser(ctx, h.conn, chi.URLParam(r, "slug"))
 		if err != nil {
 			if errors.Is(err, pgx.ErrNoRows) {
 				return fmt.Errorf("user not found")
@@ -100,7 +103,36 @@ func (h UserHandler) Get() http.HandlerFunc {
 			return fmt.Errorf("GetUser failed: %w", err)
 		}
 
-		b, err := json.Marshal(u)
+		b, err := json.Marshal(user)
+		if err != nil {
+			return fmt.Errorf("json.Marshal failed: %w", err)
+		}
+
+		w.Write(b)
+
+		return nil
+	})
+}
+
+func (h UserHandler) Update() http.HandlerFunc {
+	return slugHandler(func(w http.ResponseWriter, r *http.Request, _ string) error {
+		ctx := r.Context()
+
+		var user db.User
+		err := json.NewDecoder(r.Body).Decode(&user)
+		if err != nil {
+			return fmt.Errorf("json.Decode failed: %w", err)
+		}
+
+		user, err = h.queries.UpdateUser(ctx, h.conn, db.UpdateUserParams{
+			Slug:        chi.URLParam(r, "slug"),
+			Description: user.Description,
+		})
+		if err != nil {
+			return fmt.Errorf("UpdateUser failed: %w", err)
+		}
+
+		b, err := json.Marshal(user)
 		if err != nil {
 			return fmt.Errorf("json.Marshal failed: %w", err)
 		}

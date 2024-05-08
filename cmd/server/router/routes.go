@@ -17,6 +17,7 @@ func Handler(ctx context.Context, conns *pgxpool.Pool, host string) *chi.Mux {
 	r.Get("/api/users", uh.List())
 	r.Delete("/api/users/{slug}", uh.Delete())
 	r.Get("/api/users/{slug}", uh.Get())
+	r.Put("/api/users/{slug}", uh.Update())
 
 	th := NewTodoHandler(conns)
 	r.Post("/api/todos", th.Create())
