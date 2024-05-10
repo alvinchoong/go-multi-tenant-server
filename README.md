@@ -48,9 +48,9 @@ This collection provides a set of pre-configured API requests for testing and ex
 
 ## How It Works
 
-1. **Row-Level Security**:
+1. **Database**: Policy
 
-    PostgreSQL's Row-Level Security (RLS) ensures each tenant can access only their own data. RLS policies restrict row access by comparing each row's tenant identifier with the current session's tenant:
+    PostgreSQL's Row-Level Security (RLS) ensures that each tenant can only access their own data. RLS policies restrict row access by comparing each row's tenant identifier with the current session's tenant:
 
     ```sql
     CREATE POLICY user_isolation_policy ON users
@@ -60,7 +60,7 @@ This collection provides a set of pre-configured API requests for testing and ex
       USING (user_slug = current_setting('app.current_user'));
     ```
 
-2. **Subdomain Routing**:
+2. **App**: Tenant Identification
 
     The server uses subdomains to identify tenants. The middleware extracts the subdomain (tenant identifier) from the request and stores it in the context for subsequent access:
 
@@ -87,7 +87,7 @@ This collection provides a set of pre-configured API requests for testing and ex
     }
     ```
 
-3. **Tenant Context Setup via `BeforeAcquire` Hook**:
+3. **App**: Scoped Database Connection
 
     The `pgx` PostgreSQL driver provides a `BeforeAcquire` hook to customize connection setup before acquisition from the pool. This hook extracts the tenant's identifier from the request context and sets it in the database session to enforce tenant-specific access:
 
