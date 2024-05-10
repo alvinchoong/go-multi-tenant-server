@@ -35,10 +35,9 @@ func errmain(ctx context.Context) error {
 	})))
 
 	// DB hook before acquiring a connection
-	// DB hook before acquiring a connection
 	beforeAcquire := func(ctx context.Context, conn *pgx.Conn) bool {
-		// Extract the slug (tenant identifier) from the request context
-		if s := router.SlugFromCtx(ctx); s != "" {
+		// Extract the tenant identifier from the request context
+		if s := router.TenantFromCtx(ctx); s != "" {
 			// Set the tenant for the current database session
 			rows, err := conn.Query(ctx, "SELECT set_config('app.current_user', $1, false)", s)
 			if err != nil {

@@ -26,7 +26,7 @@ func NewTodoHandler(conn db.DBTX) TodoHandler {
 }
 
 func (h TodoHandler) Create() http.HandlerFunc {
-	return slugHandler(func(w http.ResponseWriter, r *http.Request, _ string) error {
+	return tenantHandler(func(w http.ResponseWriter, r *http.Request, _ string) error {
 		ctx := r.Context()
 
 		var todo db.Todo
@@ -57,7 +57,7 @@ func (h TodoHandler) Create() http.HandlerFunc {
 }
 
 func (h TodoHandler) List() http.HandlerFunc {
-	return slugHandler(func(w http.ResponseWriter, r *http.Request, _ string) error {
+	return tenantHandler(func(w http.ResponseWriter, r *http.Request, _ string) error {
 		ctx := r.Context()
 
 		todos, err := h.queries.ListTodos(ctx, h.conn)
@@ -77,7 +77,7 @@ func (h TodoHandler) List() http.HandlerFunc {
 }
 
 func (h TodoHandler) Get() http.HandlerFunc {
-	return slugHandler(func(w http.ResponseWriter, r *http.Request, _ string) error {
+	return tenantHandler(func(w http.ResponseWriter, r *http.Request, _ string) error {
 		ctx := r.Context()
 
 		id, err := uuid.Parse(chi.URLParam(r, "id"))
@@ -105,7 +105,7 @@ func (h TodoHandler) Get() http.HandlerFunc {
 }
 
 func (h TodoHandler) Update() http.HandlerFunc {
-	return slugHandler(func(w http.ResponseWriter, r *http.Request, _ string) error {
+	return tenantHandler(func(w http.ResponseWriter, r *http.Request, _ string) error {
 		ctx := r.Context()
 
 		id, err := uuid.Parse(chi.URLParam(r, "id"))
@@ -149,7 +149,7 @@ type todoPatchInput struct {
 }
 
 func (h TodoHandler) Patch() http.HandlerFunc {
-	return slugHandler(func(w http.ResponseWriter, r *http.Request, _ string) error {
+	return tenantHandler(func(w http.ResponseWriter, r *http.Request, _ string) error {
 		ctx := r.Context()
 
 		id, err := uuid.Parse(chi.URLParam(r, "id"))
@@ -186,7 +186,7 @@ func (h TodoHandler) Patch() http.HandlerFunc {
 }
 
 func (h TodoHandler) Delete() http.HandlerFunc {
-	return slugHandler(func(w http.ResponseWriter, r *http.Request, _ string) error {
+	return tenantHandler(func(w http.ResponseWriter, r *http.Request, _ string) error {
 		ctx := r.Context()
 
 		id, err := uuid.Parse(chi.URLParam(r, "id"))

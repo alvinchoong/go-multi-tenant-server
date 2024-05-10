@@ -25,7 +25,7 @@ func NewUserHandler(conn db.DBTX) UserHandler {
 }
 
 func (h UserHandler) Create() http.HandlerFunc {
-	return slugHandler(func(w http.ResponseWriter, r *http.Request, _ string) error {
+	return tenantHandler(func(w http.ResponseWriter, r *http.Request, _ string) error {
 		ctx := r.Context()
 
 		var user db.User
@@ -54,7 +54,7 @@ func (h UserHandler) Create() http.HandlerFunc {
 }
 
 func (h UserHandler) List() http.HandlerFunc {
-	return slugHandler(func(w http.ResponseWriter, r *http.Request, _ string) error {
+	return tenantHandler(func(w http.ResponseWriter, r *http.Request, _ string) error {
 		ctx := r.Context()
 
 		users, err := h.queries.ListUsers(ctx, h.conn)
@@ -74,7 +74,7 @@ func (h UserHandler) List() http.HandlerFunc {
 }
 
 func (h UserHandler) Get() http.HandlerFunc {
-	return slugHandler(func(w http.ResponseWriter, r *http.Request, _ string) error {
+	return tenantHandler(func(w http.ResponseWriter, r *http.Request, _ string) error {
 		ctx := r.Context()
 
 		user, err := h.queries.GetUser(ctx, h.conn, chi.URLParam(r, "slug"))
@@ -97,7 +97,7 @@ func (h UserHandler) Get() http.HandlerFunc {
 }
 
 func (h UserHandler) Update() http.HandlerFunc {
-	return slugHandler(func(w http.ResponseWriter, r *http.Request, _ string) error {
+	return tenantHandler(func(w http.ResponseWriter, r *http.Request, _ string) error {
 		ctx := r.Context()
 
 		var user db.User
@@ -126,7 +126,7 @@ func (h UserHandler) Update() http.HandlerFunc {
 }
 
 func (h UserHandler) Delete() http.HandlerFunc {
-	return slugHandler(func(w http.ResponseWriter, r *http.Request, _ string) error {
+	return tenantHandler(func(w http.ResponseWriter, r *http.Request, _ string) error {
 		ctx := r.Context()
 
 		res, err := h.queries.DeleteUser(ctx, h.conn, chi.URLParam(r, "slug"))

@@ -65,17 +65,17 @@ This collection provides a set of pre-configured API requests for testing and ex
     The server uses subdomains to identify tenants. The middleware extracts the subdomain (tenant identifier) from the request and stores it in the context for subsequent access:
 
     ```go
-    // slugMiddleware extracts the subdomain (tenant identifier) and adds it to the request context
-    func slugMiddleware(host string) func(next http.Handler) http.Handler {
+    // extractTenantMiddleware extracts the subdomain (tenant identifier) and adds it to the request context
+    func extractTenantMiddleware(host string) func(next http.Handler) http.Handler {
         return func(next http.Handler) http.Handler {
             fn := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
                 ctx := r.Context()
 
-                // Extract the subdomain (slug) from the host by removing the primary domain
+                // Extract the subdomain (tenant identifier) by removing the main domain
                 subdomain := strings.TrimSuffix(r.Host, "."+host)
                 if subdomain != "" && subdomain != host {
-                    // Store the subdomain in the request context for future use
-                    ctx = context.WithValue(ctx, SlugCtxKey, subdomain)
+                    // Store the subdomain in the request context for future access
+                    ctx = context.WithValue(ctx, TenantCtxKey, subdomain)
                 }
 
                 // Serve the request with the modified context
@@ -94,8 +94,8 @@ This collection provides a set of pre-configured API requests for testing and ex
     ```go
     // DB hook before acquiring a connection
     beforeAcquire := func(ctx context.Context, conn *pgx.Conn) bool {
-        // Extract the slug (tenant identifier) from the request context
-        if s := router.SlugFromCtx(ctx); s != "" {
+        // Extract the tenant identifier from the request context
+        if s := router.TenantFromCtx(ctx); s != "" {
             // Set the tenant for the current database session
             rows, err := conn.Query(ctx, "SELECT set_config('app.current_user', $1, false)", s)
             if err != nil {

@@ -10,7 +10,7 @@ import (
 func Handler(ctx context.Context, conns *pgxpool.Pool, host string) *chi.Mux {
 	r := chi.NewRouter()
 
-	r.Use(slugMiddleware(host))
+	r.Use(extractTenantMiddleware(host))
 
 	uh := NewUserHandler(conns)
 	r.Post("/api/users", uh.Create())
