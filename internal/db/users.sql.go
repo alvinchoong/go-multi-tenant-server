@@ -13,7 +13,7 @@ import (
 
 const CreateUser = `-- name: CreateUser :one
 INSERT INTO users (slug, description) 
-VALUES ($1,$2)
+VALUES ($1, $2)
 RETURNING slug, description, created_at, updated_at
 `
 
@@ -91,8 +91,11 @@ func (q *Queries) ListUsers(ctx context.Context, db DBTX) ([]User, error) {
 
 const UpdateUser = `-- name: UpdateUser :one
 UPDATE users 
-SET description=$2
-WHERE slug = $1
+SET 
+  description = $2,
+  updated_at  = now()
+WHERE 
+  slug = $1
 RETURNING slug, description, created_at, updated_at
 `
 
