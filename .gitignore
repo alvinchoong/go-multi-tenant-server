@@ -1,3 +1,7 @@
 tmp
 bin
 .DS_Store
+node_modules
+cmd/server/router/static
+.parcel-cache
+*_templ.go

@@ -14,7 +14,7 @@ import (
 
 const CreateTodo = `-- name: CreateTodo :one
 INSERT INTO todos (title, description, user_slug, completed) 
-VALUES ($1,$2,$3,$4)
+VALUES ($1, $2, $3, $4)
 RETURNING id, title, description, completed, user_slug, created_at, updated_at
 `
 
@@ -108,11 +108,13 @@ func (q *Queries) ListTodos(ctx context.Context, db DBTX) ([]Todo, error) {
 
 const PatchTodo = `-- name: PatchTodo :one
 UPDATE todos SET 
-  title = COALESCE($2, title),
+  title       = COALESCE($2, title),
   description = COALESCE($3, description),
-  completed = COALESCE($4, completed),
-  user_slug = COALESCE($5, user_slug)
-WHERE id = $1
+  completed   = COALESCE($4, completed),
+  user_slug   = COALESCE($5, user_slug),
+  updated_at  = now()
+WHERE
+  id = $1
 RETURNING id, title, description, completed, user_slug, created_at, updated_at
 `
 
@@ -147,11 +149,13 @@ func (q *Queries) PatchTodo(ctx context.Context, db DBTX, arg PatchTodoParams) (
 
 const UpdateTodo = `-- name: UpdateTodo :one
 UPDATE todos SET 
-  title = $2,
+  title       = $2,
   description = $3,
-  completed = $4,
-  user_slug = $5
-WHERE id = $1
+  completed   = $4,
+  user_slug   = $5,
+  updated_at  = now()
+WHERE 
+  id = $1
 RETURNING id, title, description, completed, user_slug, created_at, updated_at
 `
 

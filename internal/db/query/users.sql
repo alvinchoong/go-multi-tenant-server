@@ -3,7 +3,7 @@ SELECT * FROM users;
 
 -- name: CreateUser :one
 INSERT INTO users (slug, description) 
-VALUES ($1,$2)
+VALUES ($1, $2)
 RETURNING *;
 
 -- name: GetUser :one
@@ -16,6 +16,9 @@ WHERE slug = $1;
 
 -- name: UpdateUser :one
 UPDATE users 
-SET description=$2
-WHERE slug = $1
+SET 
+  description = $2,
+  updated_at  = now()
+WHERE 
+  slug = $1
 RETURNING *;
