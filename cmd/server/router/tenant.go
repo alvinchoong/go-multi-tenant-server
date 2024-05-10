@@ -54,3 +54,17 @@ func tenantHandler(fn func(w http.ResponseWriter, r *http.Request, slug string) 
 		}
 	}
 }
+
+// tenantUIHandler wraps a custom handler into http.HandlerFunc with tenant identifier support
+func tenantUIHandler(fn func(w http.ResponseWriter, r *http.Request, slug string) error) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		s := TenantFromCtx(ctx)
+
+		w.Header().Set("Content-Type", "text/html")
+		if err := fn(w, r, s); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}
+}

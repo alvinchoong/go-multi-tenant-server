@@ -1,0 +1,160 @@
+package components
+
+import "multi-tenant-server/internal/db"
+import "strconv"
+
+templ TodoIndex(todos []db.Todo) {
+	<section class="p-3 sm:p-5">
+		<div class="mx-auto max-w-screen-xl px-4 lg:px-12">
+			<div class="relative shadow-md sm:rounded-lg overflow-hidden">
+				<div class="navbar bg-base-100 p-4 sm:rounded-lg">
+					<div class="navbar-start">
+						<h1 class="font-semibold">Todos</h1>
+					</div>
+					<div class="navbar-end">
+						<button
+							class="btn btn-outline"
+							onclick="loading.showModal()"
+							hx-get="/todos/new"
+							hx-target="#modal"
+							hx-swap="outerHTML"
+						>
+							<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="currentColor" viewBox="0 0 20 20">
+								<path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd"></path>
+							</svg>
+							Create
+						</button>
+					</div>
+				</div>
+				<div class="divider mt-0"></div>
+				<div class="overflow-x-auto">
+					<table class="table">
+						<thead>
+							<tr>
+								<th>Title</th>
+								<th>Description</th>
+								<th>Completed</th>
+								<th>Created At</th>
+								<th>Updated At</th>
+								<th><span class="sr-only">Actions</span></th>
+							</tr>
+						</thead>
+						<tbody id="table-body">
+							for _, it := range todos {
+								@TodoRow(it)
+							}
+						</tbody>
+					</table>
+				</div>
+			</div>
+		</div>
+	</section>
+	<dialog id="loading" class="modal">
+		<span class="loading loading-ring loading-lg"></span>
+	</dialog>
+	<dialog id="modal" class="modal"></dialog>
+}
+
+templ TodoRow(todo db.Todo) {
+	<tr id={ "table-row-" + strconv.Itoa(todo.ID) }>
+		<th>{ todo.Title }</th>
+		<th>{ ToString(todo.Description, "-") }</th>
+		<th>
+			<input
+				type="checkbox"
+				class="toggle toggle-success"
+				name="completed"
+				hx-patch={ "/todos/" + strconv.Itoa(todo.ID) }
+				hx-include="this"
+				hx-target="closest tr"
+				hx-swap="outerHTML"
+				checked?={ todo.Completed }
+			/>
+		</th>
+		<td>{ todo.CreatedAt.Format("02 Jan 06 15:04:05") }</td>
+		<td>{ todo.UpdatedAt.Format("02 Jan 06 15:04:05") }</td>
+		<td class="text-end">
+			<ul class="menu menu-horizontal inline-flex">
+				<li>
+					<a
+						hx-get={ "/todos/" + strconv.Itoa(todo.ID) }
+						onclick="loading.showModal()"
+						hx-target="#modal"
+						hx-swap="outerHTML"
+					>
+						<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.66V20a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h5.34"></path><polygon points="18 2 22 6 12 16 8 16 8 12 18 2"></polygon></svg>
+					</a>
+				</li>
+				<li>
+					<a
+						hx-delete={ "/todos/" + strconv.Itoa(todo.ID) }
+						hx-trigger="click"
+						hx-target="closest tr"
+					>
+						<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+					</a>
+				</li>
+			</ul>
+		</td>
+	</tr>
+}
+
+type TodoModalParams struct {
+	HXMethod  HXMethod
+	Action    string
+	Heading   string
+	BtnText   string
+	FormAttrs templ.Attributes
+	// form inputs
+	Title       string
+	Description *string
+	Completed   bool
+}
+
+func (p TodoModalParams) formAttrs() templ.Attributes {
+	attrs := p.FormAttrs
+	attrs[p.HXMethod.String()] = p.Action
+	return attrs
+}
+
+templ TodoModal(p TodoModalParams) {
+	@Modal() {
+		<h3 class="font-bold text-lg">{ p.Heading }</h3>
+		<div class="divider"></div>
+		<form
+			class="grid gap-6 mb-0"
+			hx-disabled-elt="input,textarea,select,button"
+			{ p.formAttrs()... }
+		>
+			<label class="form-control w-full">
+				<div class="label">
+					<span class="label-text">Title</span>
+				</div>
+				<input
+					class="input input-bordered w-full"
+					type="text"
+					name="title"
+					id="title"
+					value={ p.Title }
+					required="true"
+				/>
+			</label>
+			<label class="form-control">
+				<div class="label">
+					<span class="label-text">Description</span>
+				</div>
+				<textarea class="textarea textarea-bordered h-24" name="description">{ ToString(p.Description, "") }</textarea>
+			</label>
+			<div class="form-control">
+				<label class="label cursor-pointer">
+					<span class="label-text">Completed</span>
+					<input type="checkbox" class="checkbox" name="completed" checked?={ p.Completed }/>
+				</label>
+			</div>
+			<button type="submit" class="btn btn-primary">
+				<span class="button-text">{ p.BtnText }</span>
+				<span class="htmx-indicator loading loading-dots loading-sm"></span>
+			</button>
+		</form>
+	}
+}

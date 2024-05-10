@@ -21,6 +21,7 @@ func Handler(ctx context.Context, conns *pgxpool.Pool, host string) *chi.Mux {
 	fs := http.FileServer(http.FS(staticContent))
 	r.Get("/static/*", fs.ServeHTTP)
 
+	// api
 	uh := NewUserHandler(conns)
 	r.Post("/api/users", uh.Create())
 	r.Get("/api/users", uh.List())
@@ -35,6 +36,16 @@ func Handler(ctx context.Context, conns *pgxpool.Pool, host string) *chi.Mux {
 	r.Put("/api/todos/{id}", th.Update())
 	r.Patch("/api/todos/{id}", th.Patch())
 	r.Delete("/api/todos/{id}", th.Delete())
+
+	// ui
+	tuh := NewTodoUIHandler(conns)
+	r.Get("/todos", tuh.Index())
+	r.Get("/todos/new", tuh.New())
+	r.Post("/todos", tuh.Create())
+	r.Get("/todos/{id}", tuh.Get())
+	r.Put("/todos/{id}", tuh.Update())
+	r.Patch("/todos/{id}", tuh.Patch())
+	r.Delete("/todos/{id}", tuh.Destroy())
 
 	return r
 }
