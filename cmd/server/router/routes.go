@@ -4,6 +4,7 @@ import (
 	"context"
 	"embed"
 	"net/http"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -38,14 +39,25 @@ func Handler(ctx context.Context, conns *pgxpool.Pool, host string) *chi.Mux {
 	r.Delete("/api/todos/{id}", th.Delete())
 
 	// ui
-	tuh := NewTodoUIHandler(conns)
-	r.Get("/todos", tuh.Index())
-	r.Get("/todos/new", tuh.New())
-	r.Post("/todos", tuh.Create())
-	r.Get("/todos/{id}", tuh.Get())
-	r.Put("/todos/{id}", tuh.Update())
-	r.Patch("/todos/{id}", tuh.Patch())
-	r.Delete("/todos/{id}", tuh.Destroy())
+	r.Group(func(r chi.Router) {
+		r.Use(sleepMiddleware)
+
+		tuh := NewTodoUIHandler(conns)
+		r.Get("/todos", tuh.Index())
+		r.Get("/todos/new", tuh.New())
+		r.Post("/todos", tuh.Create())
+		r.Get("/todos/{id}", tuh.Get())
+		r.Put("/todos/{id}", tuh.Update())
+		r.Patch("/todos/{id}", tuh.Patch())
+		r.Delete("/todos/{id}", tuh.Destroy())
+	})
 
 	return r
+}
+
+func sleepMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		time.Sleep(500 * time.Millisecond)
+		next.ServeHTTP(w, r)
+	})
 }
