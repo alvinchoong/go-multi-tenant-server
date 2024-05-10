@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -35,20 +34,14 @@ func errmain(ctx context.Context) error {
 		Level: level,
 	})))
 
-	// connect to db
-	var silosDB map[string]string
-	if s := os.Getenv("DATABASE_SILO_RW_URLS"); len(s) > 0 {
-		if err := json.Unmarshal([]byte(s), &silosDB); err != nil {
-			return fmt.Errorf("json.Unmarshal: %w", err)
-		}
-	}
-
+	// DB hook before acquiring a connection
 	beforeAcquire := func(ctx context.Context, conn *pgx.Conn) bool {
-		if s := router.SlugFromCtx(ctx); s != "" {
-			// set the user for the current session
+		// Extract the tenant identifier from the request context
+		if s := router.TenantFromCtx(ctx); s != "" {
+			// Set the tenant for the current database session
 			rows, err := conn.Query(ctx, "SELECT set_config('app.current_user', $1, false)", s)
 			if err != nil {
-				// log the error, and then `return false` to destroy this connection instead of leaving it open.
+				// Log the error and discard the connection
 				slog.Error("beforeAcquire conn.Query", slog.Any("err", err))
 				return false
 			}
@@ -57,7 +50,8 @@ func errmain(ctx context.Context) error {
 		return true
 	}
 
-	conns, err := db.Connect(ctx, os.Getenv("DATABASE_POOL_RW_URL"), silosDB, beforeAcquire)
+	// connect to db
+	conns, err := db.Connect(ctx, os.Getenv("DATABASE_URL"), beforeAcquire)
 	if err != nil {
 		return fmt.Errorf("db.Connect: %w", err)
 	}

@@ -12,7 +12,7 @@ var slug = "abcdef"
 
 func BenchmarkSetConfigExec(b *testing.B) {
 	ctx := context.Background()
-	conn, err := pgx.Connect(ctx, os.Getenv("DATABASE_POOL_RW_URL"))
+	conn, err := pgx.Connect(ctx, os.Getenv("DATABASE_URL"))
 	if err != nil {
 		b.Fatal(err)
 	}
@@ -31,7 +31,7 @@ func BenchmarkSetConfigExec(b *testing.B) {
 
 func BenchmarkSetConfigQueryRow(b *testing.B) {
 	ctx := context.Background()
-	conn, err := pgx.Connect(ctx, os.Getenv("DATABASE_POOL_RW_URL"))
+	conn, err := pgx.Connect(ctx, os.Getenv("DATABASE_URL"))
 	if err != nil {
 		b.Fatal(err)
 	}
@@ -51,7 +51,7 @@ func BenchmarkSetConfigQueryRow(b *testing.B) {
 
 func BenchmarkSetConfigQuery(b *testing.B) {
 	ctx := context.Background()
-	conn, err := pgx.Connect(ctx, os.Getenv("DATABASE_POOL_RW_URL"))
+	conn, err := pgx.Connect(ctx, os.Getenv("DATABASE_URL"))
 	if err != nil {
 		b.Fatal(err)
 	}

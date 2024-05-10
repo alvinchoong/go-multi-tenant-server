@@ -1,0 +1,1116 @@
+{
+	"info": {
+		"_postman_id": "d3653409-95a5-4f21-8731-07bbf5a1261e",
+		"name": "multi-tenant-test",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "1635972"
+	},
+	"item": [
+		{
+			"name": "populate data",
+			"item": [
+				{
+					"name": "user 1",
+					"item": [
+						{
+							"name": "create user",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"",
+											"pm.test(\"Response equals request\", function () {",
+											"    const res = pm.response.json();",
+											"    const req = JSON.parse(pm.request.body.raw);",
+											"    pm.expect(res.slug).to.eql(req.slug);",
+											"    pm.expect(res.description).to.eql(req.description);",
+											"});",
+											""
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"slug\": \"{{user}}\",\n    \"description\": \"default description {{user}}\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{user}}.lvh.me:8080/api/users",
+									"host": [
+										"{{user}}",
+										"lvh",
+										"me"
+									],
+									"port": "8080",
+									"path": [
+										"api",
+										"users"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "update user",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"",
+											"pm.test(\"Response equals request\", function () {",
+											"    const res = pm.response.json();",
+											"    const req = JSON.parse(pm.request.body.raw);",
+											"    pm.expect(res.slug).to.eql(req.slug);",
+											"    pm.expect(res.description).to.eql(req.description);",
+											"});",
+											""
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "PUT",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"slug\": \"{{user}}\",\n    \"description\": \"updated description {{user}}\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{user}}.lvh.me:8080/api/users/{{user}}",
+									"host": [
+										"{{user}}",
+										"lvh",
+										"me"
+									],
+									"port": "8080",
+									"path": [
+										"api",
+										"users",
+										"{{user}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "get user",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"const user = pm.collectionVariables.get(\"user\")",
+											"",
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"",
+											"pm.test(\"Response\", function () {",
+											"    const res = pm.response.json();",
+											"    pm.expect(res.slug).to.eql(user);",
+											"    pm.expect(res.description).to.eql(`updated description ${user}`);",
+											"});",
+											""
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{user}}.lvh.me:8080/api/users/{{user}}",
+									"host": [
+										"{{user}}",
+										"lvh",
+										"me"
+									],
+									"port": "8080",
+									"path": [
+										"api",
+										"users",
+										"{{user}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "list todos before creating",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"",
+											"pm.test(\"Response is empty\", function () {",
+											"    const res = pm.response.json();",
+											"    pm.expect(res).to.be.an(\"array\");",
+											"    pm.expect(res).to.be.empty;",
+											"});",
+											""
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{user}}.lvh.me:8080/api/todos",
+									"host": [
+										"{{user}}",
+										"lvh",
+										"me"
+									],
+									"port": "8080",
+									"path": [
+										"api",
+										"todos"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "create first todo",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"",
+											"pm.test(\"Response equals request\", function () {",
+											"    const res = pm.response.json();",
+											"    const req = JSON.parse(pm.request.body.raw);",
+											"    pm.expect(res.title).to.eql(req.title);",
+											"    pm.expect(res.description).to.eql(req.description);",
+											"    pm.expect(res.completed).to.eql(req.completed);",
+											"    pm.expect(res.user_slug).to.eql(req.user_slug);",
+											"});",
+											""
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"title\": \"My first task\",\n    \"description\": \"description 1\",\n    \"completed\": true,\n    \"user_slug\": \"{{user}}\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{user}}.lvh.me:8080/api/todos",
+									"host": [
+										"{{user}}",
+										"lvh",
+										"me"
+									],
+									"port": "8080",
+									"path": [
+										"api",
+										"todos"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "create second todo",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"",
+											"pm.test(\"Response equals request\", function () {",
+											"    const res = pm.response.json();",
+											"    const req = JSON.parse(pm.request.body.raw);",
+											"    pm.expect(res.title).to.eql(req.title);",
+											"    pm.expect(res.description).to.eql(req.description);",
+											"    pm.expect(res.completed).to.eql(req.completed);",
+											"});",
+											""
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"title\": \"My second task\",\n    \"description\": null,\n    \"completed\": false,\n    \"user_slug\": \"{{user}}\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{user}}.lvh.me:8080/api/todos",
+									"host": [
+										"{{user}}",
+										"lvh",
+										"me"
+									],
+									"port": "8080",
+									"path": [
+										"api",
+										"todos"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "list todos after creating",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"const user = pm.collectionVariables.get(\"user\")",
+											"",
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"",
+											"pm.test(\"Response contains todos created\", function () {",
+											"    const res = pm.response.json();",
+											"",
+											"    pm.expect(res).to.be.an(\"array\");",
+											"    pm.expect(res.length).to.equal(2);",
+											"",
+											"    pm.expect(res[0].title).to.equal(\"My first task\");",
+											"    pm.expect(res[0].description).to.equal(\"description 1\");",
+											"    pm.expect(res[0].completed).to.equal(true);",
+											"    pm.expect(res[0].user_slug).to.equal(user)",
+											"",
+											"    pm.expect(res[1].title).to.equal(\"My second task\");",
+											"    pm.expect(res[1].description).to.equal(null);",
+											"    pm.expect(res[1].completed).to.equal(false);",
+											"    pm.expect(res[1].user_slug).to.equal(user)",
+											"});",
+											""
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{user}}.lvh.me:8080/api/todos",
+									"host": [
+										"{{user}}",
+										"lvh",
+										"me"
+									],
+									"port": "8080",
+									"path": [
+										"api",
+										"todos"
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"packages": {},
+								"exec": [
+									"pm.collectionVariables.set(\"user\", \"user-1\");"
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"packages": {},
+								"exec": [
+									""
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "user 2",
+					"item": [
+						{
+							"name": "create user",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"",
+											"pm.test(\"Response equals request\", function () {",
+											"    const res = pm.response.json();",
+											"    const req = JSON.parse(pm.request.body.raw);",
+											"    pm.expect(res.slug).to.eql(req.slug);",
+											"    pm.expect(res.description).to.eql(req.description);",
+											"});",
+											""
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"slug\": \"{{user}}\",\n    \"description\": null\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{user}}.lvh.me:8080/api/users",
+									"host": [
+										"{{user}}",
+										"lvh",
+										"me"
+									],
+									"port": "8080",
+									"path": [
+										"api",
+										"users"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "update user",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"",
+											"pm.test(\"Response equals request\", function () {",
+											"    const res = pm.response.json();",
+											"    const req = JSON.parse(pm.request.body.raw);",
+											"    pm.expect(res.slug).to.eql(req.slug);",
+											"    pm.expect(res.description).to.eql(req.description);",
+											"});",
+											""
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "PUT",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"slug\": \"{{user}}\",\n    \"description\": \"updated description {{user}}\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{user}}.lvh.me:8080/api/users/{{user}}",
+									"host": [
+										"{{user}}",
+										"lvh",
+										"me"
+									],
+									"port": "8080",
+									"path": [
+										"api",
+										"users",
+										"{{user}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "get user",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"const user = pm.collectionVariables.get(\"user\")",
+											"",
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"",
+											"pm.test(\"Response\", function () {",
+											"    const res = pm.response.json();",
+											"    pm.expect(res.slug).to.eql(user);",
+											"    pm.expect(res.description).to.eql(`updated description ${user}`);",
+											"});",
+											""
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{user}}.lvh.me:8080/api/users/{{user}}",
+									"host": [
+										"{{user}}",
+										"lvh",
+										"me"
+									],
+									"port": "8080",
+									"path": [
+										"api",
+										"users",
+										"{{user}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "list todos before creating",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"",
+											"pm.test(\"Response is empty\", function () {",
+											"    const res = pm.response.json();",
+											"    pm.expect(res).to.be.an(\"array\");",
+											"    pm.expect(res).to.be.empty;",
+											"});",
+											""
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{user}}.lvh.me:8080/api/todos",
+									"host": [
+										"{{user}}",
+										"lvh",
+										"me"
+									],
+									"port": "8080",
+									"path": [
+										"api",
+										"todos"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "create first todo",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"",
+											"pm.test(\"Response equals request\", function () {",
+											"    const res = pm.response.json();",
+											"    const req = JSON.parse(pm.request.body.raw);",
+											"    pm.expect(res.title).to.eql(req.title);",
+											"    pm.expect(res.description).to.eql(req.description);",
+											"    pm.expect(res.completed).to.eql(req.completed);",
+											"    pm.expect(res.user_slug).to.eql(req.user_slug);",
+											"});",
+											""
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"title\": \"My first task\",\n    \"description\": \"description 1\",\n    \"completed\": true,\n    \"user_slug\": \"{{user}}\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{user}}.lvh.me:8080/api/todos",
+									"host": [
+										"{{user}}",
+										"lvh",
+										"me"
+									],
+									"port": "8080",
+									"path": [
+										"api",
+										"todos"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "create second todo",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"",
+											"pm.test(\"Response equals request\", function () {",
+											"    const res = pm.response.json();",
+											"    const req = JSON.parse(pm.request.body.raw);",
+											"    pm.expect(res.title).to.eql(req.title);",
+											"    pm.expect(res.description).to.eql(req.description);",
+											"    pm.expect(res.completed).to.eql(req.completed);",
+											"    pm.expect(res.user_slug).to.eql(req.user_slug);",
+											"});",
+											""
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"title\": \"My second task\",\n    \"description\": null,\n    \"completed\": false,\n    \"user_slug\": \"{{user}}\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{user}}.lvh.me:8080/api/todos",
+									"host": [
+										"{{user}}",
+										"lvh",
+										"me"
+									],
+									"port": "8080",
+									"path": [
+										"api",
+										"todos"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "list todos after creating",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"const user = pm.collectionVariables.get(\"user\")",
+											"",
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"",
+											"pm.test(\"Response contains todos created\", function () {",
+											"    const res = pm.response.json();",
+											"",
+											"    pm.expect(res).to.be.an(\"array\");",
+											"    pm.expect(res.length).to.equal(2);",
+											"",
+											"    pm.expect(res[0].title).to.equal(\"My first task\");",
+											"    pm.expect(res[0].description).to.equal(\"description 1\");",
+											"    pm.expect(res[0].completed).to.equal(true);",
+											"    pm.expect(res[0].user_slug).to.equal(user)",
+											"",
+											"    pm.expect(res[1].title).to.equal(\"My second task\");",
+											"    pm.expect(res[1].description).to.equal(null);",
+											"    pm.expect(res[1].completed).to.equal(false);",
+											"    pm.expect(res[1].user_slug).to.equal(user)",
+											"});",
+											""
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{user}}.lvh.me:8080/api/todos",
+									"host": [
+										"{{user}}",
+										"lvh",
+										"me"
+									],
+									"port": "8080",
+									"path": [
+										"api",
+										"todos"
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"packages": {},
+								"exec": [
+									"pm.collectionVariables.set(\"user\", \"user-2\");"
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"packages": {},
+								"exec": [
+									""
+								]
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "data isolation",
+			"item": [
+				{
+					"name": "user-1 get user-2",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is non 200\", function () {",
+									"    pm.response.to.not.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "user-1.lvh.me:8080/api/users/user-2",
+							"host": [
+								"user-1",
+								"lvh",
+								"me"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"users",
+								"user-2"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "user-1 update user-2",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is non 200\", function () {",
+									"    pm.response.to.not.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"slug\": \"user-2\",\n    \"description\": \"hack\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "user-1.lvh.me:8080/api/users/user-2",
+							"host": [
+								"user-1",
+								"lvh",
+								"me"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"users",
+								"user-2"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "user-1 delete user-2",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is non 200\", function () {",
+									"    pm.response.to.not.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "user-1.lvh.me:8080/api/users/user-2",
+							"host": [
+								"user-1",
+								"lvh",
+								"me"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"users",
+								"user-2"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "user-2 get user-1",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is non 200\", function () {",
+									"    pm.response.to.not.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "user-2.lvh.me:8080/api/users/user-1",
+							"host": [
+								"user-2",
+								"lvh",
+								"me"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"users",
+								"user-1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "user-2 delete user-1",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is non 200\", function () {",
+									"    pm.response.to.not.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "user-2.lvh.me:8080/api/users/user-1",
+							"host": [
+								"user-2",
+								"lvh",
+								"me"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"users",
+								"user-1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "user-2 update user-1",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is non 200\", function () {",
+									"    pm.response.to.not.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"slug\": \"user-1\",\n    \"description\": \"hack\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "user-2.lvh.me:8080/api/users/user-1",
+							"host": [
+								"user-2",
+								"lvh",
+								"me"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"users",
+								"user-1"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "cleanup",
+			"item": [
+				{
+					"name": "delete user-1",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 204\", function () {",
+									"    pm.response.to.have.status(204);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "user-1.lvh.me:8080/api/users/user-1",
+							"host": [
+								"user-1",
+								"lvh",
+								"me"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"users",
+								"user-1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "delete user-2",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 204\", function () {",
+									"    pm.response.to.have.status(204);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "user-2.lvh.me:8080/api/users/user-2",
+							"host": [
+								"user-2",
+								"lvh",
+								"me"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"users",
+								"user-2"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	]
+}

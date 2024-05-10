@@ -17,7 +17,7 @@ sql:
           - db_type: "public.citext"
             go_type:
               type: "string"
-          - db_type: "pg_catalog.timestamptz"
+          - db_type: "timestamptz"
             go_type:
               type: "time.Time"
           - db_type: "uuid"

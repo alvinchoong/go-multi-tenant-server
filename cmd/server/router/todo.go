@@ -15,20 +15,19 @@ import (
 
 type TodoHandler struct {
 	queries *db.Queries
-	conns   *db.Conns
+	conn    db.DBTX
 }
 
-func NewTodoHandler(conns *db.Conns) TodoHandler {
+func NewTodoHandler(conn db.DBTX) TodoHandler {
 	return TodoHandler{
 		queries: db.New(),
-		conns:   conns,
+		conn:    conn,
 	}
 }
 
 func (h TodoHandler) Create() http.HandlerFunc {
-	return slugHandler(func(w http.ResponseWriter, r *http.Request, slug string) error {
+	return tenantHandler(func(w http.ResponseWriter, r *http.Request, _ string) error {
 		ctx := r.Context()
-		conn := h.conns.Get(slug)
 
 		var todo db.Todo
 		err := json.NewDecoder(r.Body).Decode(&todo)
@@ -36,10 +35,11 @@ func (h TodoHandler) Create() http.HandlerFunc {
 			return fmt.Errorf("json.Decode failed: %w", err)
 		}
 
-		todo, err = h.queries.CreateTodo(ctx, conn, db.CreateTodoParams{
+		todo, err = h.queries.CreateTodo(ctx, h.conn, db.CreateTodoParams{
 			Title:       todo.Title,
 			Description: todo.Description,
-			UserSlug:    SlugFromCtx(ctx),
+			Completed:   todo.Completed,
+			UserSlug:    todo.UserSlug,
 		})
 		if err != nil {
 			return fmt.Errorf("create todo failed: %w", err)
@@ -57,11 +57,10 @@ func (h TodoHandler) Create() http.HandlerFunc {
 }
 
 func (h TodoHandler) List() http.HandlerFunc {
-	return slugHandler(func(w http.ResponseWriter, r *http.Request, slug string) error {
+	return tenantHandler(func(w http.ResponseWriter, r *http.Request, _ string) error {
 		ctx := r.Context()
-		conn := h.conns.Get(slug)
 
-		todos, err := h.queries.ListTodos(ctx, conn)
+		todos, err := h.queries.ListTodos(ctx, h.conn)
 		if err != nil {
 			return fmt.Errorf("List todos failed: %w", err)
 		}
@@ -77,41 +76,16 @@ func (h TodoHandler) List() http.HandlerFunc {
 	})
 }
 
-func (h TodoHandler) Delete() http.HandlerFunc {
-	return slugHandler(func(w http.ResponseWriter, r *http.Request, slug string) error {
-		ctx := r.Context()
-		conn := h.conns.Get(slug)
-
-		id, err := uuid.Parse(chi.URLParam(r, "id"))
-		if err != nil {
-			return fmt.Errorf("invalid todo id: %w", err)
-		}
-
-		res, err := h.queries.DeleteTodo(ctx, conn, id)
-		if err != nil {
-			return fmt.Errorf("delete todo failed: %w", err)
-		}
-		if res.RowsAffected() == 0 {
-			return fmt.Errorf("todo not found")
-		}
-
-		w.WriteHeader(http.StatusNoContent)
-
-		return nil
-	})
-}
-
 func (h TodoHandler) Get() http.HandlerFunc {
-	return slugHandler(func(w http.ResponseWriter, r *http.Request, slug string) error {
+	return tenantHandler(func(w http.ResponseWriter, r *http.Request, _ string) error {
 		ctx := r.Context()
-		conn := h.conns.Get(slug)
 
 		id, err := uuid.Parse(chi.URLParam(r, "id"))
 		if err != nil {
 			return fmt.Errorf("invalid todo id: %w", err)
 		}
 
-		todo, err := h.queries.GetTodo(ctx, conn, id)
+		todo, err := h.queries.GetTodo(ctx, h.conn, id)
 		if err != nil {
 			if errors.Is(err, pgx.ErrNoRows) {
 				return fmt.Errorf("todo not found")
@@ -125,6 +99,110 @@ func (h TodoHandler) Get() http.HandlerFunc {
 		}
 
 		w.Write(b)
+
+		return nil
+	})
+}
+
+func (h TodoHandler) Update() http.HandlerFunc {
+	return tenantHandler(func(w http.ResponseWriter, r *http.Request, _ string) error {
+		ctx := r.Context()
+
+		id, err := uuid.Parse(chi.URLParam(r, "id"))
+		if err != nil {
+			return fmt.Errorf("invalid todo id: %w", err)
+		}
+
+		var todo db.Todo
+		err = json.NewDecoder(r.Body).Decode(&todo)
+		if err != nil {
+			return fmt.Errorf("json.Decode failed: %w", err)
+		}
+
+		todo, err = h.queries.UpdateTodo(ctx, h.conn, db.UpdateTodoParams{
+			ID:          id,
+			Title:       todo.Title,
+			Description: todo.Description,
+			Completed:   todo.Completed,
+			UserSlug:    todo.UserSlug,
+		})
+		if err != nil {
+			return fmt.Errorf("create todo failed: %w", err)
+		}
+
+		b, err := json.Marshal(todo)
+		if err != nil {
+			return fmt.Errorf("json.Marshal failed: %w", err)
+		}
+
+		w.Write(b)
+
+		return nil
+	})
+}
+
+type todoPatchInput struct {
+	Title       *string `json:"title"`
+	Description *string `json:"description"`
+	Completed   *bool   `json:"completed"`
+	UserSlug    *string `json:"user_slug"`
+}
+
+func (h TodoHandler) Patch() http.HandlerFunc {
+	return tenantHandler(func(w http.ResponseWriter, r *http.Request, _ string) error {
+		ctx := r.Context()
+
+		id, err := uuid.Parse(chi.URLParam(r, "id"))
+		if err != nil {
+			return fmt.Errorf("invalid todo id: %w", err)
+		}
+
+		var input todoPatchInput
+		err = json.NewDecoder(r.Body).Decode(&input)
+		if err != nil {
+			return fmt.Errorf("json.Decode failed: %w", err)
+		}
+
+		todo, err := h.queries.PatchTodo(ctx, h.conn, db.PatchTodoParams{
+			ID:          id,
+			Title:       input.Title,
+			Description: input.Description,
+			Completed:   input.Completed,
+			UserSlug:    input.UserSlug,
+		})
+		if err != nil {
+			return fmt.Errorf("create todo failed: %w", err)
+		}
+
+		b, err := json.Marshal(todo)
+		if err != nil {
+			return fmt.Errorf("json.Marshal failed: %w", err)
+		}
+
+		w.Write(b)
+
+		return nil
+	})
+}
+
+func (h TodoHandler) Delete() http.HandlerFunc {
+	return tenantHandler(func(w http.ResponseWriter, r *http.Request, _ string) error {
+		ctx := r.Context()
+
+		id, err := uuid.Parse(chi.URLParam(r, "id"))
+		if err != nil {
+			return fmt.Errorf("invalid todo id: %w", err)
+		}
+
+		res, err := h.queries.DeleteTodo(ctx, h.conn, id)
+		if err != nil {
+			return fmt.Errorf("delete todo failed: %w", err)
+		}
+		if res.RowsAffected() == 0 {
+			return fmt.Errorf("todo not found")
+		}
+
+		w.WriteHeader(http.StatusNoContent)
 
 		return nil
 	})
