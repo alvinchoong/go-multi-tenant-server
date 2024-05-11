@@ -5,11 +5,11 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"multi-tenant-server/internal/db"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 )
 
@@ -80,7 +80,7 @@ func (h TodoHandler) Get() http.HandlerFunc {
 	return tenantHandler(func(w http.ResponseWriter, r *http.Request, _ string) error {
 		ctx := r.Context()
 
-		id, err := uuid.Parse(chi.URLParam(r, "id"))
+		id, err := strconv.Atoi(chi.URLParam(r, "id"))
 		if err != nil {
 			return fmt.Errorf("invalid todo id: %w", err)
 		}
@@ -108,7 +108,7 @@ func (h TodoHandler) Update() http.HandlerFunc {
 	return tenantHandler(func(w http.ResponseWriter, r *http.Request, _ string) error {
 		ctx := r.Context()
 
-		id, err := uuid.Parse(chi.URLParam(r, "id"))
+		id, err := strconv.Atoi(chi.URLParam(r, "id"))
 		if err != nil {
 			return fmt.Errorf("invalid todo id: %w", err)
 		}
@@ -152,7 +152,7 @@ func (h TodoHandler) Patch() http.HandlerFunc {
 	return tenantHandler(func(w http.ResponseWriter, r *http.Request, _ string) error {
 		ctx := r.Context()
 
-		id, err := uuid.Parse(chi.URLParam(r, "id"))
+		id, err := strconv.Atoi(chi.URLParam(r, "id"))
 		if err != nil {
 			return fmt.Errorf("invalid todo id: %w", err)
 		}
@@ -189,7 +189,7 @@ func (h TodoHandler) Delete() http.HandlerFunc {
 	return tenantHandler(func(w http.ResponseWriter, r *http.Request, _ string) error {
 		ctx := r.Context()
 
-		id, err := uuid.Parse(chi.URLParam(r, "id"))
+		id, err := strconv.Atoi(chi.URLParam(r, "id"))
 		if err != nil {
 			return fmt.Errorf("invalid todo id: %w", err)
 		}

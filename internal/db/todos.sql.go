@@ -8,7 +8,6 @@ package db
 import (
 	"context"
 
-	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgconn"
 )
 
@@ -50,7 +49,7 @@ DELETE FROM todos
 WHERE id = $1
 `
 
-func (q *Queries) DeleteTodo(ctx context.Context, db DBTX, id uuid.UUID) (pgconn.CommandTag, error) {
+func (q *Queries) DeleteTodo(ctx context.Context, db DBTX, id int) (pgconn.CommandTag, error) {
 	return db.Exec(ctx, DeleteTodo, id)
 }
 
@@ -59,7 +58,7 @@ SELECT id, title, description, completed, user_slug, created_at, updated_at FROM
 WHERE id = $1
 `
 
-func (q *Queries) GetTodo(ctx context.Context, db DBTX, id uuid.UUID) (Todo, error) {
+func (q *Queries) GetTodo(ctx context.Context, db DBTX, id int) (Todo, error) {
 	row := db.QueryRow(ctx, GetTodo, id)
 	var i Todo
 	err := row.Scan(
@@ -119,11 +118,11 @@ RETURNING id, title, description, completed, user_slug, created_at, updated_at
 `
 
 type PatchTodoParams struct {
-	ID          uuid.UUID `json:"id"`
-	Title       *string   `json:"title"`
-	Description *string   `json:"description"`
-	Completed   *bool     `json:"completed"`
-	UserSlug    *string   `json:"user_slug"`
+	ID          int     `json:"id"`
+	Title       *string `json:"title"`
+	Description *string `json:"description"`
+	Completed   *bool   `json:"completed"`
+	UserSlug    *string `json:"user_slug"`
 }
 
 func (q *Queries) PatchTodo(ctx context.Context, db DBTX, arg PatchTodoParams) (Todo, error) {
@@ -160,11 +159,11 @@ RETURNING id, title, description, completed, user_slug, created_at, updated_at
 `
 
 type UpdateTodoParams struct {
-	ID          uuid.UUID `json:"id"`
-	Title       string    `json:"title"`
-	Description *string   `json:"description"`
-	Completed   bool      `json:"completed"`
-	UserSlug    string    `json:"user_slug"`
+	ID          int     `json:"id"`
+	Title       string  `json:"title"`
+	Description *string `json:"description"`
+	Completed   bool    `json:"completed"`
+	UserSlug    string  `json:"user_slug"`
 }
 
 func (q *Queries) UpdateTodo(ctx context.Context, db DBTX, arg UpdateTodoParams) (Todo, error) {
