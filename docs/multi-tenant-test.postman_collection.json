@@ -10,7 +10,7 @@
 			"name": "populate data",
 			"item": [
 				{
-					"name": "user 1",
+					"name": "user 11",
 					"item": [
 						{
 							"name": "create user",
@@ -374,7 +374,7 @@
 								"type": "text/javascript",
 								"packages": {},
 								"exec": [
-									"pm.collectionVariables.set(\"user\", \"user-1\");"
+									"pm.collectionVariables.set(\"user\", \"user-11\");"
 								]
 							}
 						},
@@ -391,7 +391,7 @@
 					]
 				},
 				{
-					"name": "user 2",
+					"name": "user 12",
 					"item": [
 						{
 							"name": "create user",
@@ -756,7 +756,7 @@
 								"type": "text/javascript",
 								"packages": {},
 								"exec": [
-									"pm.collectionVariables.set(\"user\", \"user-2\");"
+									"pm.collectionVariables.set(\"user\", \"user-12\");"
 								]
 							}
 						},
@@ -1017,7 +1017,7 @@
 			"name": "cleanup",
 			"item": [
 				{
-					"name": "delete user-1",
+					"name": "delete user-11",
 					"event": [
 						{
 							"listen": "test",
@@ -1036,9 +1036,9 @@
 						"method": "DELETE",
 						"header": [],
 						"url": {
-							"raw": "user-1.lvh.me:8080/api/users/user-1",
+							"raw": "user-11.lvh.me:8080/api/users/user-11",
 							"host": [
-								"user-1",
+								"user-11",
 								"lvh",
 								"me"
 							],
@@ -1046,14 +1046,14 @@
 							"path": [
 								"api",
 								"users",
-								"user-1"
+								"user-11"
 							]
 						}
 					},
 					"response": []
 				},
 				{
-					"name": "delete user-2",
+					"name": "delete user-12",
 					"event": [
 						{
 							"listen": "test",
@@ -1072,9 +1072,9 @@
 						"method": "DELETE",
 						"header": [],
 						"url": {
-							"raw": "user-2.lvh.me:8080/api/users/user-2",
+							"raw": "user-12.lvh.me:8080/api/users/user-12",
 							"host": [
-								"user-2",
+								"user-12",
 								"lvh",
 								"me"
 							],
@@ -1082,7 +1082,7 @@
 							"path": [
 								"api",
 								"users",
-								"user-2"
+								"user-12"
 							]
 						}
 					},

@@ -20,7 +20,6 @@ sql:
           - db_type: "timestamptz"
             go_type:
               type: "time.Time"
-          - db_type: "uuid"
+          - db_type: "serial"
             go_type:
-              import: "github.com/google/uuid"
-              type: "UUID"
+              type: "int"
