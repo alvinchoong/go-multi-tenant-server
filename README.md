@@ -1,10 +1,10 @@
 # Multi-Tenant Go Server Example
 
-This project provides an example of a Go multi-tenant server setup with subdomain routing, demonstrating how to isolate tenant data using PostgreSQL Row-Level Security (RLS).
+This project demonstrates a Go multi-tenant server setup using subdomain routing and PostgreSQL Row-Level Security (RLS) to ensure data isolation among tenants.
 
 ## Getting Started
 
-Follow these steps to clone the repository, install dependencies, and run the server:
+To get the server running locally:
 
 1. **Clone the repository**:
 
@@ -48,21 +48,38 @@ This collection provides a set of pre-configured API requests for testing and ex
 
 ## How It Works
 
-1. **Database**: Policy
+### Database
 
-    PostgreSQL's Row-Level Security (RLS) ensures that each tenant can only access their own data. RLS policies restrict row access by comparing each row's tenant identifier with the current session's tenant:
+1. Row-Level Security (RLS)
+
+    PostgreSQL's RLS ensures that each tenant can only access their own data. RLS policies restrict row access by comparing each row's tenant identifier with the current session's tenant:
 
     ```sql
-    CREATE POLICY user_isolation_policy ON users
-      USING (slug = current_setting('app.current_user'));
-
+    -- RLS Policy
     CREATE POLICY todo_isolation_policy ON todos
       USING (user_slug = current_setting('app.current_user'));
+
+    -- Enable RLS
+    ALTER TABLE todos ENABLE ROW LEVEL SECURITY;
     ```
 
-2. **App**: Tenant Identification
+2. Query Execution:
 
-    The server uses subdomains to identify tenants. The middleware extracts the subdomain (tenant identifier) from the request and stores it in the context for subsequent access:
+    With RLS policies in place, you can run queries that attempt to access all records, but the results will automatically be filtered based on the current session's tenant:
+
+    ![PSQL Query Success](docs/psql.gif)
+
+    If the tenant is not set, access will be restricted:
+
+    ![PSQL Query Error](docs/psql-error.gif)
+
+### App
+
+The application leverages the database's RLS configurations to ensure that each tenant's data access is restricted appropriately. Here's how it translates these settings into its operational logic:
+
+1. Identifying the Tenant
+
+    The app uses subdomains to identify tenants. The middleware extracts the subdomain (tenant identifier) from the request and stores it in the context for subsequent access:
 
     ```go
     // extractTenantMiddleware extracts the subdomain (tenant identifier) and adds it to the request context
@@ -87,9 +104,9 @@ This collection provides a set of pre-configured API requests for testing and ex
     }
     ```
 
-3. **App**: Scoped Database Connection
+2. Configuring Database Session
 
-    The `pgx` PostgreSQL driver provides a `BeforeAcquire` hook to customize connection setup before acquisition from the pool. This hook extracts the tenant's identifier from the request context and sets it in the database session to enforce tenant-specific access:
+    Utilizes the [pgxpool BeforeAcquire](https://github.com/jackc/pgx/blob/v5.5.5/pgxpool/pool.go#L114-L117) hook to configure each database session with the necessary tenant context. This setup allows the database to restrict data access in accordance with RLS policies:
 
     ```go
     // DB hook before acquiring a connection
@@ -111,14 +128,9 @@ This collection provides a set of pre-configured API requests for testing and ex
 
 ## Row-Level Security Notes
 
-- **Superusers**:
-  Superusers have unrestricted access to the database and can bypass all RLS policies, identified by `pg_roles.rolsuper = true`.
-
-- **BYPASSRLS Roles**:
-  Roles that are allowed to bypass RLS are identified by `pg_roles.rolbypassrls = true`.
-
-- **Table Owners**:
-  Table owners bypass RLS by default but can enforce it with `ALTER TABLE ... FORCE ROW LEVEL SECURITY`.
+- **Superusers**: Can bypass all RLS policies.
+- **BYPASSRLS Roles**: Designated roles that bypass RLS.
+- **Table Owners**: Default bypass can be overridden with RLS enforcement.
 
 For further details, refer to the official [PostgreSQL documentation](https://www.postgresql.org/docs/current/ddl-rowsecurity.html#DDL-ROWSECURITY).
 
